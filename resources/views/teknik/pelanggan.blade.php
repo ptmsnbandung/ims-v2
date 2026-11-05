@@ -27,6 +27,7 @@
          alamatQuery: '{{ $filters['alamat'] ?? '' }}',
          statusFilter: '{{ $filters['status'] ?? 'all' }}',
          wilayahFilter: '{{ $filters['wilayah'] ?? '' }}',
+         bulanFilter: '{{ $filters['bulan'] ?? '' }}',
          perPageFilter: '{{ $filters['per_page'] ?? '10' }}',
          isLoading: false,
          filterDebounceTimer: null,
@@ -55,6 +56,7 @@
                  if (this.alamatQuery) params.append('alamat', this.alamatQuery);
                  if (this.statusFilter) params.append('status', this.statusFilter);
                  if (this.wilayahFilter) params.append('wilayah', this.wilayahFilter);
+                 if (this.bulanFilter) params.append('bulan', this.bulanFilter);
                  if (this.perPageFilter) params.append('per_page', this.perPageFilter);
                  url = '{{ route($pelangganRoute) }}?' + params.toString();
              }
@@ -105,6 +107,7 @@
              this.groupLayananFilter = '';
              this.statusFilter = 'all';
              this.wilayahFilter = '';
+             this.bulanFilter = '';
              this.perPageFilter = '10';
              this.activeTab = 'all';
              this.fetchData('{{ route($pelangganRoute) }}?status=all&per_page=10');
@@ -687,8 +690,8 @@
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
         <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm" @submit.prevent="fetchData()" onsubmit="return false;" data-no-auto-search="true" data-ajax="true">
-            <!-- 6 Kolom Filter Responsif -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <!-- 7 Kolom Filter Responsif (4 Kolom Baris 1, 3 Kolom Baris 2) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                 
                 <!-- 1. Search No Internet / Nama / NIK / HP (Paling Kiri) -->
                 <div>
@@ -747,8 +750,31 @@
                     </select>
                 </div>
 
-                <!-- 4. Input Alamat -->
+                <!-- 4. Filter Bulan (Date Create / User Baru) -->
                 <div>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                        <span>Bulan Registrasi</span>
+                        <template x-if="bulanFilter">
+                            <span class="text-[9px] text-blue-600 dark:text-blue-400 font-mono font-normal lowercase cursor-pointer hover:underline" @click="bulanFilter = ''; fetchData()">clear</span>
+                        </template>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                            </svg>
+                        </div>
+                        <input type="month" 
+                               name="bulan" 
+                               x-model="bulanFilter"
+                               @change="fetchData()"
+                               value="{{ $filters['bulan'] ?? '' }}" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
+                    </div>
+                </div>
+
+                <!-- 5. Input Alamat (Spans 2 columns on medium & desktop) -->
+                <div class="col-span-1 sm:col-span-2 md:col-span-2">
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Alamat</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
@@ -769,7 +795,7 @@
                     </div>
                 </div>
 
-                <!-- 5. Dropdown Semua Status -->
+                <!-- 6. Dropdown Semua Status -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
                     <select name="status" 
@@ -783,7 +809,7 @@
                     </select>
                 </div>
 
-                <!-- 6. Dropdown Semua Wilayah -->
+                <!-- 7. Dropdown Semua Wilayah -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Wilayah</label>
                     <select name="wilayah" 

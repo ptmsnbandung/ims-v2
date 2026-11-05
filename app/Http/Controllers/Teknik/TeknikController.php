@@ -1911,6 +1911,22 @@ class TeknikController extends Controller
             });
         }
 
+        if ($request->filled('bulan')) {
+            $bulan = trim($request->bulan);
+            if (preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+                [$year, $month] = explode('-', $bulan);
+                $query->whereYear('date_create', $year)
+                      ->whereMonth('date_create', (int)$month);
+                $filterLabel .= ' | Bulan: ' . \Carbon\Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
+            } elseif (preg_match('/^\d{1,2}$/', $bulan)) {
+                $query->whereMonth('date_create', (int)$bulan);
+                $filterLabel .= ' | Bulan: ' . $bulan;
+            } else {
+                $query->where('date_create', 'like', "{$bulan}%");
+                $filterLabel .= ' | Periode: ' . $bulan;
+            }
+        }
+
         $filename = 'Pendaftaran_Baru_IMS_' . date('Ymd_His') . '.csv';
 
         $headers = [
@@ -2534,6 +2550,20 @@ class TeknikController extends Controller
             });
         }
 
+        // Filter: Bulan Registrasi (Date Create / User Baru)
+        if ($request->filled('bulan')) {
+            $bulan = trim($request->bulan);
+            if (preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+                [$year, $month] = explode('-', $bulan);
+                $query->whereYear('date_create', $year)
+                      ->whereMonth('date_create', (int)$month);
+            } elseif (preg_match('/^\d{1,2}$/', $bulan)) {
+                $query->whereMonth('date_create', (int)$bulan);
+            } else {
+                $query->where('date_create', 'like', "{$bulan}%");
+            }
+        }
+
         $pelanggan = $query->orderBy('date_create', 'desc')
                            ->orderBy('nomor_internet', 'desc')
                            ->paginate($perPage)
@@ -2621,7 +2651,7 @@ class TeknikController extends Controller
             'wilayahList' => $wilayahList,
             'paketList' => $paketList,
             'bwCounts' => $bwCounts,
-            'filters' => array_merge($request->only(['layanan', 'group_layanan', 'search', 'alamat', 'wilayah', 'per_page']), ['status' => $statusFilter]),
+            'filters' => array_merge($request->only(['layanan', 'group_layanan', 'search', 'alamat', 'wilayah', 'bulan', 'per_page']), ['status' => $statusFilter]),
         ]);
     }
 
@@ -2698,6 +2728,22 @@ class TeknikController extends Controller
                 $q->where('nama_kota_pasang', 'like', '%' . $request->wilayah . '%')
                   ->orWhere('kode_wilayah_kota_pasang', 'like', '%' . $request->wilayah . '%');
             });
+        }
+
+        if ($request->filled('bulan')) {
+            $bulan = trim($request->bulan);
+            if (preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+                [$year, $month] = explode('-', $bulan);
+                $query->whereYear('date_create', $year)
+                      ->whereMonth('date_create', (int)$month);
+                $filterLabel .= ' | Bulan: ' . \Carbon\Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y');
+            } elseif (preg_match('/^\d{1,2}$/', $bulan)) {
+                $query->whereMonth('date_create', (int)$bulan);
+                $filterLabel .= ' | Bulan: ' . $bulan;
+            } else {
+                $query->where('date_create', 'like', "{$bulan}%");
+                $filterLabel .= ' | Periode: ' . $bulan;
+            }
         }
 
         $totalRecords = (clone $query)->count();

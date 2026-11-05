@@ -218,4 +218,240 @@ class BillingService
             ];
         }
     }
+
+    /**
+     * Generate & Publish First Monthly Invoice untuk Pelanggan Baru yang Selesai Aktivasi.
+     * Jika aktif di pertengahan bulan, otomatis menerapkan prorate di invoice perdana tersebut.
+     * Riwayat last_month_billing & last_year_billing disesuaikan dengan periode aktif.
+     */
+    public static function generateFirstActivationInvoice(string $nomorInternet, $activationDate = null, string $userCreator = 'System Aktivasi'): array
+    {
+        if (!Schema::hasTable('trx_billing_layanan')) {
+            return ['success' => false, 'message' => 'Tabel trx_billing_layanan tidak ditemukan.'];
+        }
+
+        // 1. Validasi: Hanya untuk pelanggan baru (belum memiliki riwayat invoice bulanan)
+        $hasPriorBilling = DB::table('trx_billing_layanan')
+            ->where('nomor_internet', $nomorInternet)
+            ->where('hide', '!=', '1')
+            ->exists();
+
+        if ($hasPriorBilling) {
+            return [
+                'success' => true,
+                'message' => 'Pelanggan sudah memiliki riwayat invoice sebelumnya (bukan pelanggan baru).',
+                'invoice' => null,
+            ];
+        }
+
+        // 2. Tentukan tanggal & periode aktivasi
+        if ($activationDate instanceof Carbon) {
+            $actDate = $activationDate->copy()->setTimezone('Asia/Jakarta');
+        } elseif (is_string($activationDate) && !empty($activationDate)) {
+            try {
+                $actDate = Carbon::parse($activationDate, 'Asia/Jakarta');
+            } catch (\Throwable $th) {
+                $actDate = Carbon::now('Asia/Jakarta');
+            }
+        } else {
+            $actDate = Carbon::now('Asia/Jakarta');
+        }
+
+        $bulan = $actDate->format('m');
+        $tahun = $actDate->format('Y');
+        $currentDay = (int) $actDate->format('d');
+        $totalDays = (int) $actDate->daysInMonth;
+        $namaBulanShort = $actDate->format('M');
+        $periodeTagihan = "{$namaBulanShort} {$tahun}";
+        $kodeBilling = "INV/{$nomorInternet}/{$bulan}/{$tahun}";
+
+        // 3. Ambil data pelanggan dan paket bandwith
+        $custTable = Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : 'view_batchjob';
+        $customer = DB::table("{$custTable} as r")
+            ->leftJoin('m_bandwith as bw', 'r.kode_bandwith', '=', 'bw.kode_bandwith')
+            ->leftJoin('m_bandwith_kategori as bk', 'bw.kode_kategori_bandwith', '=', 'bk.kode_kategori_bandwith')
+            ->where('r.nomor_internet', $nomorInternet)
+            ->select(
+                'r.nomor_internet',
+                'r.nama_pelanggan',
+                'r.kode_bandwith',
+                'r.potongan',
+                'r.potongan_note',
+                'r.ppn',
+                'r.ppn_nom',
+                'bw.nama_bandwith',
+                'bw.nominal_bandwith',
+                'bw.harga_bandwith',
+                'bw.kode_kategori_bandwith',
+                'bk.nama_kategori_bandwith'
+            )
+            ->first();
+
+        if (!$customer) {
+            return ['success' => false, 'message' => "Pelanggan {$nomorInternet} tidak ditemukan."];
+        }
+
+        // Abaikan jika paket Broadband Free
+        $kodeKategori = strtoupper(trim($customer->kode_kategori_bandwith ?? ''));
+        $namaKategori = strtoupper(trim($customer->nama_kategori_bandwith ?? ''));
+        if ($kodeKategori === 'BF' || str_contains($namaKategori, 'BROADBAND FREE')) {
+            if (Schema::hasTable('trx_batchjob_register')) {
+                DB::table('trx_batchjob_register')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->update([
+                        'last_month_billing' => $bulan,
+                        'last_year_billing' => $tahun,
+                    ]);
+            }
+            return ['success' => true, 'message' => 'Paket Broadband Free, invoice Rp 0 dilewati.', 'invoice' => null];
+        }
+
+        $hargaNormal = (float) ($customer->harga_bandwith ?? 0);
+        if ($hargaNormal <= 0) {
+            $hargaNormal = (float) ($customer->nominal_bandwith ?? 0);
+        }
+
+        // 4. Hitung Prorate jika aktif di pertengahan bulan (tanggal > 1)
+        $isProrate = false;
+        $activeDays = $totalDays;
+        if ($currentDay > 1) {
+            $isProrate = true;
+            $activeDays = max(1, $totalDays - $currentDay + 1);
+            $totalLayanan = round(($activeDays / $totalDays) * $hargaNormal);
+            $potongan = max(0, $hargaNormal - $totalLayanan);
+            $descPotongan = "Prorate Aktivasi: Aktif tgl {$currentDay}-{$totalDays} ({$activeDays}/{$totalDays} hari)";
+        } else {
+            $customerDiscount = (float) ($customer->potongan ?? 0);
+            $totalLayanan = max(0, $hargaNormal - $customerDiscount);
+            $potongan = $customerDiscount;
+            $descPotongan = $customer->potongan_note ?? '-';
+        }
+
+        $nowStr = Carbon::now('Asia/Jakarta')->toDateTimeString();
+
+        // 5. Coba generate Snap Token Midtrans bila service tersedia
+        $paymentPost = '-';
+        $paymentRespondPost = null;
+        $expiry = null;
+        if (class_exists(\App\Services\MidtransService::class)) {
+            try {
+                $contactInfo = DB::table('m_pelanggan')->where('nik_penduduk', function ($q) use ($nomorInternet) {
+                    $q->select('nik_penduduk')->from('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->limit(1);
+                })->first();
+
+                $midtrans = app(\App\Services\MidtransService::class)->generateSnapLink($kodeBilling, $totalLayanan, [
+                    'nama' => $customer->nama_pelanggan ?? 'Pelanggan',
+                    'email' => $contactInfo->email ?? 'billing@ims-router.net',
+                    'nomor_hp' => $contactInfo->nomor_hp ?? '08123456789',
+                ]);
+                if (!empty($midtrans['payment_respond_post'])) {
+                    $paymentPost = $midtrans['payment_post'] ?? '-';
+                    $paymentRespondPost = $midtrans['payment_respond_post'];
+                    $expiry = $midtrans['expiry'] ?? null;
+                }
+            } catch (\Throwable $th) {}
+        }
+
+        // 6. Simpan Invoice Langsung Publish (Status 13)
+        DB::beginTransaction();
+        try {
+            DB::table('trx_billing_layanan')->insert([
+                'kode_billing_layanan' => $kodeBilling,
+                'nomor_internet' => $nomorInternet,
+                'kode_bandwith' => $customer->kode_bandwith,
+                'nominal_bandwith' => $customer->nominal_bandwith ?? '0',
+                'bulan_tagihan' => $bulan,
+                'tahun_tagihan' => $tahun,
+                'periode_tagihan' => $periodeTagihan,
+                'potongan' => (string) $potongan,
+                'desc_potongan' => $descPotongan,
+                'ppn' => $customer->ppn_nom ?? '0.11',
+                'tax' => $customer->ppn ?? '2',
+                'voucher' => '-',
+                'total_layanan' => (string) $totalLayanan,
+                'notif_mail' => '0',
+                'notif_wa' => '0',
+                'status_bill_lay' => '13', // Langsung Publish (Terbit Tagihan)
+                'denda' => null,
+                'invoice_file' => null,
+                'payment_type' => '1',
+                'payment_post' => $paymentPost,
+                'payment_respond_post' => $paymentRespondPost,
+                'payment_publish' => $nowStr,
+                'expiry' => $expiry,
+                'note_adjusment' => $isProrate ? "Prorate aktivasi pelanggan baru ({$activeDays}/{$totalDays} hari)" : "Invoice aktivasi pelanggan baru",
+                'date_create' => $nowStr,
+                'user_create' => $userCreator,
+                'date_update' => $nowStr,
+                'user_update' => $userCreator,
+                'hide' => '0',
+                'islock' => null,
+            ]);
+
+            if (Schema::hasTable('trx_billing_layanan_detail')) {
+                $komponenNama = 'LAYANAN ' . ($customer->nama_kategori_bandwith ?? ($customer->nama_bandwith ?? 'INTERNET')) . ' ' . ($customer->nominal_bandwith ?? '') . ' Mbps';
+                if ($isProrate) {
+                    $komponenNama .= " (Prorate {$activeDays}/{$totalDays} Hari)";
+                }
+                DB::table('trx_billing_layanan_detail')->insert([
+                    'kode_billing_lay_detail' => "D-{$nomorInternet}-{$bulan}/{$tahun}-T11",
+                    'kode_billing_layanan' => $kodeBilling,
+                    'kode_item' => 'T11',
+                    'komponen' => $komponenNama,
+                    'qty' => 1,
+                    'biaya' => (string) $totalLayanan,
+                    'date_create' => $nowStr,
+                    'user_create' => $userCreator,
+                    'hide' => null,
+                ]);
+            }
+
+            if (Schema::hasTable('trx_billing_layanan_log')) {
+                DB::table('trx_billing_layanan_log')->insert([
+                    'kode_billing_lay_log' => "LOG-{$nomorInternet}-{$bulan}/{$tahun}-" . time(),
+                    'kode_billing_layanan' => $kodeBilling,
+                    'status_bill_lay' => '13',
+                    'note_billing_lay' => "Invoice perdana otomatis diterbitkan (Published) saat aktivasi oleh {$userCreator}" . ($isProrate ? " [Prorate Rp " . number_format($totalLayanan, 0, ',', '.') . "]" : ""),
+                    'date_create' => $nowStr,
+                    'user_create' => $userCreator,
+                    'hide' => '0',
+                ]);
+            }
+
+            // 7. Update last_month_billing, last_year_billing, dan prorate di trx_batchjob_register
+            if (Schema::hasTable('trx_batchjob_register')) {
+                $updateCustomer = [
+                    'last_month_billing' => $bulan,
+                    'last_year_billing' => $tahun,
+                ];
+                if (Schema::hasColumn('trx_batchjob_register', 'prorate')) {
+                    $updateCustomer['prorate'] = $isProrate ? '1' : '0';
+                }
+                DB::table('trx_batchjob_register')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->update($updateCustomer);
+            }
+
+            DB::commit();
+
+            Log::info("First Invoice Generated & Published for {$nomorInternet}: {$kodeBilling} (Prorate: " . ($isProrate ? "Yes, Rp {$totalLayanan}" : 'No') . ") by {$userCreator}");
+
+            return [
+                'success' => true,
+                'message' => "Invoice perdana {$kodeBilling} berhasil diterbitkan (Published)" . ($isProrate ? " dengan Prorate Rp " . number_format($totalLayanan, 0, ',', '.') . " ({$activeDays}/{$totalDays} hari)" : ""),
+                'invoice' => $kodeBilling,
+                'nominal' => $totalLayanan,
+                'is_prorate' => $isProrate,
+                'active_days' => $activeDays,
+                'total_days' => $totalDays,
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Failed to generate first activation invoice for {$nomorInternet}: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Gagal generate invoice aktivasi: ' . $e->getMessage(),
+            ];
+        }
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Noc;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessRebootOnuJob;
 use App\Models\ActivityLog;
+use App\Services\BillingService;
 use App\Services\Network\CustomerProvisioningService;
 use App\Services\Network\MikrotikService;
 use App\Services\Olt\OltConnectionService;
@@ -1804,10 +1805,22 @@ class NocController extends Controller
             }
         }
 
+        // Otomatis terbitkan invoice bulanan perdana & publish (prorate jika aktif di pertengahan bulan)
+        $invoiceMsg = '';
+        try {
+            $actDate = $request->jadwal_aktivasi ?: now();
+            $invRes = BillingService::generateFirstActivationInvoice($nomorInternet, $actDate, $currentUser);
+            if (!empty($invRes['success']) && !empty($invRes['invoice'])) {
+                $invoiceMsg = ' ' . $invRes['message'];
+            }
+        } catch (\Throwable $invErr) {
+            Log::warning("Auto first invoice failed for {$nomorInternet}: " . $invErr->getMessage());
+        }
+
         if ($mikrotikResult['success']) {
-            return redirect()->back()->with('success', "Report Aktivasi untuk pelanggan {$nomorInternet} berhasil disimpan! PPPoE Secret '{$ontUs}' sukses dibuat/diperbarui di MikroTik ({$routerName}) & layanan online (#20).");
+            return redirect()->back()->with('success', "Report Aktivasi untuk pelanggan {$nomorInternet} berhasil disimpan! PPPoE Secret '{$ontUs}' sukses dibuat/diperbarui di MikroTik ({$routerName}) & layanan online (#20).{$invoiceMsg}");
         } else {
-            return redirect()->back()->with('warning', "Report Aktivasi untuk pelanggan {$nomorInternet} tersimpan (Status #20), namun ada kendala di MikroTik ({$routerName}): " . $mikrotikResult['message']);
+            return redirect()->back()->with('warning', "Report Aktivasi untuk pelanggan {$nomorInternet} tersimpan (Status #20), namun ada kendala di MikroTik ({$routerName}): " . $mikrotikResult['message'] . ".{$invoiceMsg}");
         }
     }
 
@@ -1932,10 +1945,21 @@ class NocController extends Controller
             }
         }
 
+        // Otomatis terbitkan invoice bulanan perdana & publish (prorate jika aktif di pertengahan bulan)
+        $invoiceMsg = '';
+        try {
+            $invRes = BillingService::generateFirstActivationInvoice($nomorInternet, now(), $currentUser);
+            if (!empty($invRes['success']) && !empty($invRes['invoice'])) {
+                $invoiceMsg = ' ' . $invRes['message'];
+            }
+        } catch (\Throwable $invErr) {
+            Log::warning("Auto first invoice on PPPoE activation failed for {$nomorInternet}: " . $invErr->getMessage());
+        }
+
         if ($secretResult['success']) {
-            return redirect()->back()->with('success', "PPPoE Secret '{$request->pppoe_username}' berhasil dibuat di {$routerName} dan layanan pelanggan {$nomorInternet} resmi AKTIF!");
+            return redirect()->back()->with('success', "PPPoE Secret '{$request->pppoe_username}' berhasil dibuat di {$routerName} dan layanan pelanggan {$nomorInternet} resmi AKTIF!{$invoiceMsg}");
         } else {
-            return redirect()->back()->with('warning', "Status pelanggan {$nomorInternet} diubah ke AKTIF (#20), namun sinkronisasi MikroTik gagal: " . $secretResult['message']);
+            return redirect()->back()->with('warning', "Status pelanggan {$nomorInternet} diubah ke AKTIF (#20), namun sinkronisasi MikroTik gagal: " . $secretResult['message'] . ".{$invoiceMsg}");
         }
     }
 

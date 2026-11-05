@@ -33,6 +33,11 @@
          filterDebounceTimer: null,
 
          init() {
+             this.$nextTick(() => {
+                 if (this.$refs.searchInput) {
+                     this.$refs.searchInput.focus();
+                 }
+             });
              window.addEventListener('popstate', () => {
                  this.fetchData(window.location.href, false);
              });
@@ -693,24 +698,28 @@
             <!-- 7 Kolom Filter Responsif (4 Kolom Baris 1, 3 Kolom Baris 2) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                 
-                <!-- 1. Search No Internet / Nama / NIK / HP (Paling Kiri) -->
+                <!-- 1. Search No Internet / Nama / NIK / HP (Paling Kiri - Focused) -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cari Pelanggan</label>
+                    <label class="block text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                        <span>Cari Pelanggan</span>
+                    </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-blue-500 dark:text-blue-400">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                             </svg>
                         </div>
                         <input type="text" 
                                name="search" 
+                               x-ref="searchInput"
+                               autofocus
                                x-model="searchQuery"
                                @input="applyFilter(300)"
                                @keydown.enter.prevent="fetchData()"
                                data-no-auto-search="true"
                                value="{{ $filters['search'] ?? '' }}" 
                                placeholder="No Internet, Nama, NIK..." 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
+                               class="w-full bg-blue-50/40 dark:bg-slate-950 border-2 border-blue-500 dark:border-blue-500/90 focus:border-blue-600 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/25 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition shadow-xs font-semibold">
                     </div>
                 </div>
 
@@ -773,8 +782,8 @@
                     </div>
                 </div>
 
-                <!-- 5. Input Alamat (Spans 2 columns on medium & desktop) -->
-                <div class="col-span-1 sm:col-span-2 md:col-span-2">
+                <!-- 5. Input Alamat (Ukuran Sama dengan Kolom Lain) -->
+                <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Alamat</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">

@@ -63,8 +63,12 @@ class ProcessRebootOnuJob implements ShouldQueue
                 return;
             }
 
+            OltConnectionService::markOnuRebooting($indexOlt, $kodeOlt, $item->nomor_internet, 300);
             $rebootResult = $oltService->rebootOnu($indexOlt, $kodeOlt);
             $isSuccess = (bool)($rebootResult['success'] ?? false);
+            if (!$isSuccess) {
+                OltConnectionService::clearOnuRebooting($indexOlt, $kodeOlt, $item->nomor_internet);
+            }
             $message = $rebootResult['message'] ?? ($isSuccess ? 'Reboot ONU berhasil' : 'Gagal reboot ONU');
 
             DB::table('reboot_onu_queues')->where('id', $this->queueId)->update([

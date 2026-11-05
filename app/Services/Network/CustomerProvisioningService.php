@@ -188,10 +188,15 @@ class CustomerProvisioningService
         // 5. OLT: Remote Reboot ONU
         if ($indexOlt) {
             try {
+                OltConnectionService::markOnuRebooting($indexOlt, $kodeOlt, $nomorInternet, 300);
                 $oltReboot = $this->olt->rebootOnu($indexOlt, $kodeOlt);
                 $results['olt_reboot'] = (bool)($oltReboot['success'] ?? false);
+                if (!$results['olt_reboot']) {
+                    OltConnectionService::clearOnuRebooting($indexOlt, $kodeOlt, $nomorInternet);
+                }
                 $results['messages'][] = 'OLT Reboot: ' . ($oltReboot['message'] ?? '');
             } catch (Exception $e) {
+                OltConnectionService::clearOnuRebooting($indexOlt, $kodeOlt, $nomorInternet);
                 $results['messages'][] = 'OLT Reboot Error: ' . $e->getMessage();
             }
         } else {
@@ -459,10 +464,15 @@ class CustomerProvisioningService
             $results['messages'][] = 'OLT Reboot: Ditugaskan ke antrean background queue.';
         } elseif ($indexOlt) {
             try {
+                OltConnectionService::markOnuRebooting($indexOlt, $kodeOlt, $nomorInternet, 300);
                 $oltReboot = $this->olt->rebootOnu($indexOlt, $kodeOlt);
                 $results['olt_reboot'] = (bool)($oltReboot['success'] ?? false);
+                if (!$results['olt_reboot']) {
+                    OltConnectionService::clearOnuRebooting($indexOlt, $kodeOlt, $nomorInternet);
+                }
                 $results['messages'][] = 'OLT Reboot: ' . ($oltReboot['message'] ?? '');
             } catch (Exception $e) {
+                OltConnectionService::clearOnuRebooting($indexOlt, $kodeOlt, $nomorInternet);
                 $results['messages'][] = 'OLT Reboot Error: ' . $e->getMessage();
             }
         } else {

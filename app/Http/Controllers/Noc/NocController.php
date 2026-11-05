@@ -2386,8 +2386,12 @@ class NocController extends Controller
         }
 
         try {
+            OltConnectionService::markOnuRebooting($indexOlt, $kodeOlt, $item->nomor_internet, 300);
             $rebootResult = $oltService->rebootOnu($indexOlt, $kodeOlt);
             $isSuccess = (bool)($rebootResult['success'] ?? false);
+            if (!$isSuccess) {
+                OltConnectionService::clearOnuRebooting($indexOlt, $kodeOlt, $item->nomor_internet);
+            }
             $msg = $rebootResult['message'] ?? ($isSuccess ? 'Reboot ONU berhasil' : 'Gagal reboot ONU');
 
             DB::table('reboot_onu_queues')->where('id', $item->id)->update([
@@ -2520,7 +2524,12 @@ class NocController extends Controller
             return redirect()->back()->with('error', "Index OLT/ONU belum terdaftar untuk {$nomorInternet}.");
         }
 
+        // Tandai ONU sedang dalam reboot sengaja agar notifikasi DOWN & UP ditekan di NOC
+        OltConnectionService::markOnuRebooting($indexOlt, $kodeOlt, $nomorInternet, 300);
         $result = $oltService->rebootOnu($indexOlt, $kodeOlt);
+        if (!($result['success'] ?? false)) {
+            OltConnectionService::clearOnuRebooting($indexOlt, $kodeOlt, $nomorInternet);
+        }
 
         // Catat ke audit trail activity_logs
         if (Schema::hasTable('activity_logs')) {
@@ -4629,17 +4638,28 @@ class NocController extends Controller
 
                             // Jika di discovery PON perangkat terbukti UP/working atau memiliki sinyal optik normal:
                             if (in_array($hwPhase, ['working', 'ready', 'online', 'operation', 'up']) || $hasValidSignal) {
+                                $matchedUserRec = $regMap["{$olt->kode_olt}_{$interface}"]
+                                    ?? ($regMap["{$olt->kode_olt}_{$fullInterface}"]
+                                    ?? ($regMap["{$olt->kode_olt}_{$port}:{$onuId}"] ?? null));
+                                $recCustName = $matchedUserRec->nama_pelanggan ?? 'Pelanggan';
+                                $recCustNo = $matchedUserRec->nomor_internet ?? null;
+
+                                // Jika ONU baru pulih dari reboot yang disengaja:
+                                // Bersihkan flag reboot secara hening TANPA memunculkan notif 'ONU Pulih (UP)'
+                                if (OltConnectionService::isOnuRebooting($interface, $olt->kode_olt, $recCustNo)) {
+                                    OltConnectionService::clearOnuRebooting($interface, $olt->kode_olt, $recCustNo);
+                                    Cache::forget("onu_outage_time_{$olt->kode_olt}_{$interface}");
+                                    Cache::forget("onu_outage_time_{$olt->kode_olt}_{$fullInterface}");
+                                    Cache::forget("onu_outage_time_{$olt->kode_olt}_{$port}:{$onuId}");
+                                    continue;
+                                }
+
                                 // Catat pemulihan jika sebelumnya tercatat mengalami gangguan
                                 $hadOutage = Cache::has("onu_outage_time_{$olt->kode_olt}_{$interface}") ||
                                              Cache::has("onu_outage_time_{$olt->kode_olt}_{$fullInterface}") ||
                                              Cache::has("onu_outage_time_{$olt->kode_olt}_{$port}:{$onuId}");
 
                                 if ($hadOutage) {
-                                    $matchedUserRec = $regMap["{$olt->kode_olt}_{$interface}"]
-                                        ?? ($regMap["{$olt->kode_olt}_{$fullInterface}"]
-                                        ?? ($regMap["{$olt->kode_olt}_{$port}:{$onuId}"] ?? null));
-                                    $recCustName = $matchedUserRec->nama_pelanggan ?? 'Pelanggan';
-                                    $recCustNo = $matchedUserRec->nomor_internet ?? null;
                                     $recActionUrl = $recCustNo ? route('teknik.pelanggan.profile', ['nomor_internet' => $recCustNo]) : route('teknik.pelanggan');
 
                                     $recId = 'rec_onu_' . md5($devKeyWithOlt . '_' . date('YmdH'));
@@ -4711,6 +4731,13 @@ class NocController extends Controller
 
                         $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
                         $custNo = $matchedUser->nomor_internet ?? '-';
+
+                        // Abaikan jika ONU sedang dalam proses reboot yang disengaja
+                        // (supaya tidak memunculkan notif DOWN / LOS / suara peringatan)
+                        if (OltConnectionService::isOnuRebooting($interface, $olt->kode_olt, $custNo)) {
+                            continue;
+                        }
+
                         $rawPhase = strtolower($st['phase'] ?? ($isLos ? 'los' : 'down'));
                         if (in_array($rawPhase, ['dyinggasp', 'offline', 'poweroff'])) {
                             $phaseLabel = 'OFFLINE';
@@ -4812,6 +4839,21 @@ class NocController extends Controller
         if (!empty($prevDownRegistry) && is_array($prevDownRegistry)) {
             foreach ($prevDownRegistry as $oldKey => $oldData) {
                 if (!isset($currentDownOnuRegistry[$oldKey])) {
+                    $oldIface = $oldData['fullInterface'] ?? '';
+                    $oldOlt = $oldData['olt_kode'] ?? null;
+                    $oldCustNo = $oldData['custNo'] ?? null;
+
+                    // Jika ONU pulih setelah proses reboot yang disengaja, bersihkan status tanpa memunculkan notif 'ONU Pulih (UP)'
+                    if (OltConnectionService::isOnuRebooting($oldIface, $oldOlt, $oldCustNo)) {
+                        OltConnectionService::clearOnuRebooting($oldIface, $oldOlt, $oldCustNo);
+                        if (!empty($oldOlt) && !empty($oldIface)) {
+                            $cleanIface = str_ireplace('gpon-onu_', '', $oldIface);
+                            Cache::forget("onu_outage_time_{$oldOlt}_{$cleanIface}");
+                            Cache::forget("onu_outage_time_{$oldOlt}_{$oldIface}");
+                        }
+                        continue;
+                    }
+
                     $already = false;
                     foreach ($recentRecoveries as $rc) {
                         if (($rc['device_key'] ?? '') === $oldKey && (time() - strtotime($rc['created_at_raw'] ?? '')) < 7200) {

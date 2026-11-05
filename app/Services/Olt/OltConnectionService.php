@@ -935,6 +935,105 @@ class OltConnectionService
     }
 
     /**
+     * Tandai bahwa ONU sedang dalam proses reboot yang disengaja (TTL default 300 detik).
+     * Selama masa ini, notifikasi DOWN/LOS dan pemulihan UP di NOC akan ditiadakan.
+     */
+    public static function markOnuRebooting(string $indexOlt, ?string $kodeOlt = null, ?string $nomorInternet = null, int $ttlSeconds = 300): void
+    {
+        $raw = trim($indexOlt);
+        if (empty($raw)) {
+            return;
+        }
+
+        $cleanIface = str_ireplace('gpon-onu_', '', $raw);
+        $fullIface = "gpon-onu_{$cleanIface}";
+        $normKode = !empty($kodeOlt) ? strtoupper(trim($kodeOlt)) : null;
+
+        Cache::put("onu_rebooting_{$cleanIface}", true, $ttlSeconds);
+        Cache::put("onu_rebooting_{$fullIface}", true, $ttlSeconds);
+
+        if ($normKode) {
+            Cache::put("onu_rebooting_{$normKode}_{$cleanIface}", true, $ttlSeconds);
+            Cache::put("onu_rebooting_{$normKode}_{$fullIface}", true, $ttlSeconds);
+        }
+
+        if (preg_match('/(\d+):(\d+)/', $cleanIface, $m)) {
+            Cache::put("onu_rebooting_{$m[1]}:{$m[2]}", true, $ttlSeconds);
+            if ($normKode) {
+                Cache::put("onu_rebooting_{$normKode}_{$m[1]}:{$m[2]}", true, $ttlSeconds);
+            }
+        }
+
+        if (!empty($nomorInternet)) {
+            Cache::put("onu_rebooting_cust_{$nomorInternet}", true, $ttlSeconds);
+        }
+    }
+
+    /**
+     * Periksa apakah ONU sedang dalam jendela waktu reboot yang disengaja.
+     */
+    public static function isOnuRebooting(string $interface, ?string $kodeOlt = null, ?string $nomorInternet = null): bool
+    {
+        $cleanIface = str_ireplace('gpon-onu_', '', trim($interface));
+        $fullIface = "gpon-onu_{$cleanIface}";
+        $normKode = !empty($kodeOlt) ? strtoupper(trim($kodeOlt)) : null;
+
+        if (!empty($nomorInternet) && Cache::has("onu_rebooting_cust_{$nomorInternet}")) {
+            return true;
+        }
+
+        if ($normKode) {
+            if (Cache::has("onu_rebooting_{$normKode}_{$cleanIface}") || Cache::has("onu_rebooting_{$normKode}_{$fullIface}")) {
+                return true;
+            }
+        }
+
+        if (Cache::has("onu_rebooting_{$cleanIface}") || Cache::has("onu_rebooting_{$fullIface}")) {
+            return true;
+        }
+
+        if (preg_match('/(\d+):(\d+)/', $cleanIface, $m)) {
+            if ($normKode && Cache::has("onu_rebooting_{$normKode}_{$m[1]}:{$m[2]}")) {
+                return true;
+            }
+            if (Cache::has("onu_rebooting_{$m[1]}:{$m[2]}")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Bersihkan status reboot yang disengaja setelah ONU kembali UP/normal.
+     */
+    public static function clearOnuRebooting(string $interface, ?string $kodeOlt = null, ?string $nomorInternet = null): void
+    {
+        $cleanIface = str_ireplace('gpon-onu_', '', trim($interface));
+        $fullIface = "gpon-onu_{$cleanIface}";
+        $normKode = !empty($kodeOlt) ? strtoupper(trim($kodeOlt)) : null;
+
+        Cache::forget("onu_rebooting_{$cleanIface}");
+        Cache::forget("onu_rebooting_{$fullIface}");
+
+        if ($normKode) {
+            Cache::forget("onu_rebooting_{$normKode}_{$cleanIface}");
+            Cache::forget("onu_rebooting_{$normKode}_{$fullIface}");
+        }
+
+        if (preg_match('/(\d+):(\d+)/', $cleanIface, $m)) {
+            Cache::forget("onu_rebooting_{$m[1]}:{$m[2]}");
+            if ($normKode) {
+                Cache::forget("onu_rebooting_{$normKode}_{$m[1]}:{$m[2]}");
+            }
+        }
+
+        if (!empty($nomorInternet)) {
+            Cache::forget("onu_rebooting_cust_{$nomorInternet}");
+        }
+    }
+
+    /**
      * Reboot ONU via OLT Telnet (mode pon-onu-mng)
      * Contoh index_olt: "gpon-onu_1/2/6:3", "1/2/6:3", atau "GPON-ONU_1/2/6:3"
      * Mendukung auto-resolusi OLT: kode_olt ('O1', 'O2', 'O3'), nama ('Soreang', 'Bagong', 'MSN'), atau slot index
@@ -1010,8 +1109,20 @@ class OltConnectionService
         $enablePassword = $this->decryptPassword($olt->enable_password ?? null);
         $oltName = $olt->name_olt ?? ($olt->kode_olt ?? "OLT {$ip}:{$port}");
 
+        $cleanIfaceOnly = str_ireplace('gpon-onu_', '', $cleanIndex);
+        $custNo = null;
+        if (Schema::hasTable('trx_batchjob_register')) {
+            $custNo = DB::table('trx_batchjob_register')
+                ->where('index_olt', $cleanIndex)
+                ->orWhere('index_olt', $cleanIfaceOnly)
+                ->value('nomor_internet');
+        }
+
         try {
             Log::info("Executing OLT Remote Reboot on {$oltName} ({$ip}:{$port}) for ONU: {$cleanIndex}");
+
+            // Tandai ONU sedang dalam reboot sebelum telnet dijalankan agar scan NOC tidak menangkap transisi awal
+            self::markOnuRebooting($cleanIndex, $olt->kode_olt ?? $kodeOlt, $custNo, 300);
 
             $commands = [
                 'configure terminal',
@@ -1027,6 +1138,8 @@ class OltConnectionService
             $hasOnuError = str_contains($output, '%Error 20202') || str_contains($output, 'Invalid parameter');
 
             if (!$enteredMng || $hasOnuError) {
+                // Batalkan tanda reboot jika perintah telnet ditolak / gagal
+                self::clearOnuRebooting($cleanIndex, $olt->kode_olt ?? $kodeOlt, $custNo);
                 Log::warning("OLT Remote Reboot rejected for {$cleanIndex} on {$oltName}: ONU not found or invalid interface.");
                 return [
                     'success' => false,
@@ -1037,12 +1150,19 @@ class OltConnectionService
 
             Log::info("OLT Remote Reboot result for {$cleanIndex} on {$oltName}: OK");
 
+            // Bersihkan tracker waktu gangguan lama jika ada
+            if (!empty($olt->kode_olt)) {
+                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$cleanIfaceOnly}");
+                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$cleanIndex}");
+            }
+
             return [
                 'success' => true,
                 'message' => "Perintah reboot berhasil dikirim ke OLT {$oltName} ({$ip}:{$port}) untuk ONU {$cleanIndex}.",
                 'output' => $output,
             ];
         } catch (Exception $e) {
+            self::clearOnuRebooting($cleanIndex, $olt->kode_olt ?? $kodeOlt, $custNo);
             Log::error("OLT Remote Reboot error for {$cleanIndex} on {$oltName}: " . $e->getMessage());
 
             return [

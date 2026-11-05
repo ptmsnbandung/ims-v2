@@ -2119,6 +2119,8 @@ class TeknikController extends Controller
             'nama_sales' => $request->nama_sales,
             'ont_us' => $ontUs,
             'ont_ps' => $ontPs,
+            'last_month_billing' => date('m'),
+            'last_year_billing' => date('Y'),
             'islock' => '0',
             'prorate' => '0',
             'hide' => '0',

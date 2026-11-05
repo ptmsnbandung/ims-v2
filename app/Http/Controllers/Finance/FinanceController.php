@@ -426,9 +426,21 @@ class FinanceController extends Controller
             $custLastMonth = (int) ($p->last_month_billing ?? 0);
             $custLastYear = (int) ($p->last_year_billing ?? 0);
 
+            // Handle jika pelanggan baru (last billing null, 0, atau <= 1970 akibat Unix Epoch)
+            if ($custLastYear <= 1970 || $custLastMonth <= 0) {
+                $hasPriorBilling = DB::table('trx_billing_layanan')
+                    ->where('nomor_internet', $p->nomor_internet)
+                    ->where('hide', 0)
+                    ->exists();
+                if (!$hasPriorBilling) {
+                    $custLastMonth = $prevMonthInt;
+                    $custLastYear = $prevYearInt;
+                }
+            }
+
             if ($custLastMonth !== $prevMonthInt || $custLastYear !== $prevYearInt) {
                 $expectedName = Carbon::createFromDate($prevYearInt, $prevMonthInt, 1)->format('M Y');
-                $lastStr = ($custLastMonth > 0 && $custLastYear > 0)
+                $lastStr = ($custLastMonth > 0 && $custLastYear > 1970)
                     ? Carbon::createFromDate($custLastYear, $custLastMonth, 1)->format('M Y')
                     : 'Belum Ada';
                 return redirect()->back()->with('error', "Invoice periode {$periodeTagihan} tidak dapat dibuat untuk {$p->nama_pelanggan} ({$p->nomor_internet}). Invoice bulan sebelumnya ({$expectedName}) belum di-generate. Last Billing: {$lastStr}.");
@@ -3336,9 +3348,16 @@ class FinanceController extends Controller
             ->whereIn('nomor_internet', $pelanggans->pluck('nomor_internet'))
             ->pluck('status_bill_lay', 'nomor_internet');
 
+        // Check which customers have any invoice history ever created
+        $priorInvoices = DB::table('trx_billing_layanan')
+            ->whereIn('nomor_internet', $pelanggans->pluck('nomor_internet'))
+            ->where('hide', 0)
+            ->pluck('nomor_internet')
+            ->flip();
+
         $expectedPrevStr = Carbon::createFromDate($prevYearInt, $prevMonthInt, 1)->format('M Y');
 
-        $data = $pelanggans->map(function($p) use ($existingInvoices, $periodeStr, $prevMonthInt, $prevYearInt, $expectedPrevStr) {
+        $data = $pelanggans->map(function($p) use ($existingInvoices, $priorInvoices, $periodeStr, $prevMonthInt, $prevYearInt, $expectedPrevStr) {
             $hasInv = $existingInvoices->has($p->nomor_internet);
             $harga = (float)($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
             $pot = (float)($p->potongan ?? 0);
@@ -3347,8 +3366,19 @@ class FinanceController extends Controller
             $custLastMonth = (int) ($p->last_month_billing ?? 0);
             $custLastYear = (int) ($p->last_year_billing ?? 0);
 
+            $isFirstBilling = false;
+            if ($custLastYear <= 1970 || $custLastMonth <= 0) {
+                if (!$priorInvoices->has($p->nomor_internet)) {
+                    $isFirstBilling = true;
+                    $custLastMonth = $prevMonthInt;
+                    $custLastYear = $prevYearInt;
+                }
+            }
+
             $lastBillingDisplay = '-';
-            if ($custLastMonth > 0 && $custLastYear > 0) {
+            if ($isFirstBilling) {
+                $lastBillingDisplay = 'Pelanggan Baru';
+            } elseif ($custLastMonth > 0 && $custLastYear > 1970) {
                 try {
                     $lastBillingDisplay = Carbon::createFromDate($custLastYear, $custLastMonth, 1)->format('M Y');
                 } catch (\Throwable $e) {

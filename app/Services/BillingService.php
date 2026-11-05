@@ -88,6 +88,18 @@ class BillingService
                 // Contoh: untuk invoice bulan 11 tahun 2026, last_month_billing harus 10 dan last_year_billing harus 2026
                 $custLastMonth = (int) ($p->last_month_billing ?? 0);
                 $custLastYear = (int) ($p->last_year_billing ?? 0);
+
+                if ($custLastYear <= 1970 || $custLastMonth <= 0) {
+                    $hasPriorBilling = DB::table('trx_billing_layanan')
+                        ->where('nomor_internet', $p->nomor_internet)
+                        ->where('hide', 0)
+                        ->exists();
+                    if (!$hasPriorBilling) {
+                        $custLastMonth = $prevMonthInt;
+                        $custLastYear = $prevYearInt;
+                    }
+                }
+
                 if ($custLastMonth !== $prevMonthInt || $custLastYear !== $prevYearInt) {
                     $skippedCount++;
                     continue;

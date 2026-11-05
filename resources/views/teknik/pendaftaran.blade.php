@@ -226,12 +226,12 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        <th class="py-2.5 px-3">Pelanggan</th>
-                        <th class="py-2.5 px-3">Group Layanan</th>
-                        <th class="py-2.5 px-3">Lokasi Pemasangan</th>
-                        <th class="py-2.5 px-3 min-w-[190px]">Status</th>
-                        <th class="py-2.5 px-3 min-w-[160px]">Tanggal SO</th>
-                        <th class="py-2.5 px-3 text-center min-w-[120px]">Aksi</th>
+                        <th class="py-3 px-3.5 min-w-[210px]">Pelanggan</th>
+                        <th class="py-3 px-3.5 w-32">Group Layanan</th>
+                        <th class="py-3 px-3.5 min-w-[230px] max-w-sm">Lokasi Pemasangan</th>
+                        <th class="py-3 px-3.5 min-w-[190px]">Status</th>
+                        <th class="py-3 px-3.5 min-w-[160px]">Tanggal SO</th>
+                        <th class="py-3 px-3.5 text-center min-w-[140px] w-40">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs text-slate-700 dark:text-slate-300">
@@ -239,7 +239,7 @@
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150">
                             
                             <!-- 1. Pelanggan -->
-                            <td class="py-2.5 px-3 align-top">
+                            <td class="py-3 px-3.5 align-top">
                                 @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
                                    class="group block"
@@ -247,10 +247,10 @@
                                     <div class="font-bold font-mono text-blue-600 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 group-hover:underline tracking-wide text-xs">
                                         {{ $item->nomor_internet }}
                                     </div>
-                                    <div class="mt-0.5 font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs transition-colors">
+                                    <div class="mt-0.5 font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs transition-colors flex items-center gap-1.5 flex-wrap">
                                         <span>{{ $item->nama_pelanggan }}</span>
-                                        <span class="text-slate-500 dark:text-slate-400 font-normal no-underline">
-                                            ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
+                                        <span class="inline-flex items-center px-1 rounded text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 no-underline">
+                                            {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }}
                                         </span>
                                     </div>
                                 </a>
@@ -258,38 +258,42 @@
                                 <div class="font-bold font-mono text-slate-400 text-xs tracking-wide">
                                     -
                                 </div>
-                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs flex items-center gap-1.5 flex-wrap">
                                     <span>{{ $item->nama_pelanggan }}</span>
-                                    <span class="text-slate-500 dark:text-slate-400 font-normal">
-                                        ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
+                                    <span class="inline-flex items-center px-1 rounded text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                        {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }}
                                     </span>
                                 </div>
                                 @endif
-                                <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
-                                    {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }} 
+                                <div class="inline-flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-1">
+                                    <span>{{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }}</span>
                                     @if($item->nominal_bandwith)
-                                        <span class="text-slate-900 dark:text-white font-bold">{{ $item->nominal_bandwith }} Mbps</span>
+                                        <span class="px-1.5 py-0.2 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-mono font-bold">{{ $item->nominal_bandwith }} Mbps</span>
                                     @endif
                                 </div>
                             </td>
 
                             <!-- 2. Group Layanan -->
-                            <td class="py-2.5 px-3 align-top font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
-                                {{ $item->group_layanan ?: 'MEDIANET' }}
+                            <td class="py-3 px-3.5 align-top">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    {{ $item->group_layanan ?: 'MEDIANET' }}
+                                </span>
                             </td>
 
                             <!-- 3. Lokasi Pemasangan -->
-                            <td class="py-2.5 px-3 align-top max-w-xs">
-                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[10px] tracking-wide block mb-0.5">
-                                    {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
-                                </span>
-                                <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed uppercase">
-                                    {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
-                                </p>
+                            <td class="py-3 px-3.5 align-top max-w-sm">
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wide border border-slate-200 dark:border-slate-700">
+                                        {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
+                                    </span>
+                                    <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-snug uppercase line-clamp-2" title="{{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}">
+                                        {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
+                                    </p>
+                                </div>
                             </td>
 
                             <!-- 4. Status & Tombol Billing -->
-                            <td class="py-2.5 px-3 align-top space-y-1.5">
+                            <td class="py-3 px-3.5 align-top space-y-1.5">
                                 <div>
                                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-xs
                                         @if(in_array($item->status_reg, ['17', '17.1']))
@@ -329,48 +333,55 @@
                                 </div>
 
                                 @if(!empty($item->instalasi_date_start))
-                                    <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium">
-                                        Jadwal: <strong class="text-slate-800 dark:text-slate-200">{{ \Carbon\Carbon::parse($item->instalasi_date_start)->translatedFormat('d M Y') }}</strong>
-                                        {{ $item->instalasi_time ?? '' }}
+                                    <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                        </svg>
+                                        <span>Jadwal: <strong class="text-slate-800 dark:text-slate-200">{{ \Carbon\Carbon::parse($item->instalasi_date_start)->translatedFormat('d M Y') }}</strong></span>
+                                        @if(!empty($item->instalasi_time))
+                                            <span class="text-slate-500 font-mono text-[9px]">({{ $item->instalasi_time }})</span>
+                                        @endif
                                     </div>
                                 @endif
 
-                                @if($item->date_update)
-                                    <div class="text-[10px] text-slate-500 dark:text-slate-400">
-                                        Updated <span class="underline text-slate-700 dark:text-slate-300 font-medium">{{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M Y H:i') }} WIB</span>
-                                    </div>
-                                @endif
-
-                                <!-- Tombol Billing Popup -->
-                                <div>
+                                <!-- Tautan Billing & Waktu Update -->
+                                <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
                                     <button type="button" 
                                             @click="openBillingModal('{{ $item->nomor_internet }}')"
-                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition cursor-pointer"
                                             title="Lihat Rincian Billing">
-                                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <svg class="w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
                                         </svg>
                                         <span>Billing</span>
                                     </button>
+                                    @if($item->date_update)
+                                        <span class="text-[9.5px] text-slate-400 dark:text-slate-500 font-mono" title="Terakhir diperbarui: {{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M Y H:i') }} WIB">
+                                            Upd: {{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M H:i') }}
+                                        </span>
+                                    @endif
                                 </div>
                             </td>
 
                             <!-- 5. Tanggal SO -->
-                            <td class="py-2.5 px-3 align-top text-xs space-y-0.5">
-                                <div class="text-slate-900 dark:text-white font-bold text-[10px]">
+                            <td class="py-3 px-3.5 align-top space-y-1">
+                                <div class="text-slate-900 dark:text-white font-bold font-mono text-[10.5px]">
                                     {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }} WIB
                                 </div>
-                                <div class="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-semibold">
-                                    {{ $item->user_create ?: 'DRAFFTER' }}
+                                <div class="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-semibold flex items-center gap-1">
+                                    <svg class="w-2.5 h-2.5 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                    </svg>
+                                    <span>{{ $item->user_create ?: 'DRAFTER' }}</span>
                                 </div>
-                                <div class="text-[10px] text-blue-700 dark:text-blue-400 font-mono font-bold">
-                                    SALES: {{ $item->nama_sales ?: '-' }}
+                                <div class="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/80">
+                                    Sales: {{ $item->nama_sales ?: '-' }}
                                 </div>
                             </td>
 
                             <!-- 6. Aksi Workflow -->
-                            <td class="py-2.5 px-3 align-top text-xs">
-                                <div class="flex flex-col gap-1 min-w-[120px]">
+                            <td class="py-3 px-3.5 align-top text-xs">
+                                <div class="flex flex-col gap-1.5 min-w-[130px]">
                                     @php
                                         $canManageTechnical = !auth()->user()?->isNoc() || auth()->user()?->hasRole(['admin', 'direktur']);
                                     @endphp
@@ -381,7 +392,7 @@
                                         @if(in_array($item->status_reg, ['11', '11.1', '12']))
                                             <button type="button" 
                                                     @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                     title="Buat Jadwal Survey Lapangan">
                                                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
@@ -394,7 +405,7 @@
                                         @if(in_array($item->status_reg, ['13', '13.1']))
                                             <button type="button" 
                                                     @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                     title="Input Laporan Hasil Survey Lokasi">
                                                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -403,8 +414,8 @@
                                             </button>
                                             <button type="button" 
                                                     @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
-                                                <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/50 border border-sky-200 dark:border-sky-800 text-[10px] transition font-semibold cursor-pointer">
+                                                <svg class="w-2.5 h-2.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                                 </svg>
                                                 <span>Ubah Survey</span>
@@ -415,7 +426,7 @@
                                         @if($item->status_reg == '16')
                                             <button type="button" 
                                                     @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                     title="Buat Jadwal Instalasi & Pemasangan">
                                                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 9.75v1.409l4.26 4.26" />
@@ -424,8 +435,8 @@
                                             </button>
                                             <button type="button" 
                                                     @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-semibold">
-                                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-[10px] transition font-semibold cursor-pointer">
+                                                <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                                 </svg>
                                                 <span>Edit Hasil Survey</span>
@@ -436,7 +447,7 @@
                                         @if(in_array($item->status_reg, ['17', '17.1']))
                                             <button type="button" 
                                                     @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                     title="Input Laporan Hasil Instalasi & Barang">
                                                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -445,8 +456,8 @@
                                             </button>
                                             <button type="button" 
                                                     @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
-                                                <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/50 border border-sky-200 dark:border-sky-800 text-[10px] transition font-semibold cursor-pointer">
+                                                <svg class="w-2.5 h-2.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                                 </svg>
                                                 <span>Ubah Instalasi</span>
@@ -459,31 +470,31 @@
                                                 {{-- Belum kirim request ke NOC: tampilkan tombol kirim request --}}
                                                 <button type="button" 
                                                         @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                        class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                        class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                         title="Kirim Permintaan Aktivasi Layanan ke Tim NOC">
                                                     <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8m5.84-2.58a5 5 0 0 0-7.38-5.84l3.4 3.4M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM6.166 5.106a.75.75 0 0 1 1.06 0l1.592 1.592a.75.75 0 0 1-1.06 1.06L6.166 6.166a.75.75 0 0 1 0-1.06Zm11.668 0a.75.75 0 0 1 0 1.06l-1.592 1.592a.75.75 0 1 1-1.06-1.06l1.592-1.592a.75.75 0 0 1 1.06 0Z" />
                                                     </svg>
-                                                    <span>Request Aktivasi NOC</span>
+                                                    <span>Request Aktivasi</span>
                                                 </button>
                                                 <button type="button" 
                                                         @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                        class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
-                                                    <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-[10px] transition font-semibold cursor-pointer">
+                                                    <svg class="w-2.5 h-2.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                                     </svg>
-                                                    <span>Edit Hasil Instalasi</span>
+                                                    <span>Edit Hasil</span>
                                                 </button>
                                             @else
                                                 {{-- Sudah dikirim ke NOC: menunggu jadwal aktivasi oleh NOC --}}
-                                                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
+                                                <div class="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                                     <span>Menunggu Jadwal NOC</span>
                                                 </div>
                                                 <button type="button" 
                                                         @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                        class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
-                                                    <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-[10px] transition font-semibold cursor-pointer">
+                                                    <svg class="w-2.5 h-2.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                     </svg>
@@ -494,43 +505,43 @@
                                     @else
                                         {{-- TAMPILAN MONITORING UNTUK ROLE NOC (PROSES INSTALASI DILAKUKAN TEKNISI) --}}
                                         @if(in_array($item->status_reg, ['11', '11.1', '12']))
-                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
+                                            <div class="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                                                <span>Antrean Survey (Teknisi)</span>
+                                                <span>Antrean Survey</span>
                                             </div>
                                         @elseif(in_array($item->status_reg, ['13', '13.1']))
-                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-[10px] font-bold">
+                                            <div class="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-[10px] font-bold">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
-                                                <span>Survey Terjadwal (Teknisi)</span>
+                                                <span>Survey Terjadwal</span>
                                             </div>
                                         @elseif($item->status_reg == '16')
-                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">
+                                            <div class="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                                                <span>Antrean Instalasi (Teknisi)</span>
+                                                <span>Antrean Instalasi</span>
                                             </div>
                                             <button type="button" 
                                                     @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-semibold">
-                                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-[10px] transition font-semibold cursor-pointer">
+                                                <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                 </svg>
-                                                <span>Lihat Hasil Survey</span>
+                                                <span>Lihat Survey</span>
                                             </button>
                                         @elseif(in_array($item->status_reg, ['17', '17.1']))
-                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 text-[10px] font-bold">
+                                            <div class="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 text-[10px] font-bold">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
-                                                <span>Proses Instalasi (Teknisi)</span>
+                                                <span>Proses Instalasi</span>
                                             </div>
                                         @elseif($item->status_reg == '18')
-                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
+                                            <div class="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                                 <span>Selesai Instalasi</span>
                                             </div>
                                             <button type="button" 
                                                     @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
-                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-[10px] transition font-semibold cursor-pointer">
+                                                <svg class="w-2.5 h-2.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                 </svg>
@@ -541,14 +552,14 @@
 
                                     {{-- Tahap 6: Jadwal Aktivasi Terbit (#19, #19.1) --}}
                                     @if(in_array($item->status_reg, ['19', '19.1']))
-                                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
+                                        <div class="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
                                             <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
                                             <span>Terjadwal di NOC</span>
                                         </div>
                                         <button type="button" 
                                                 @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
-                                            <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="w-full inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-[10px] transition font-semibold cursor-pointer">
+                                            <svg class="w-2.5 h-2.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                             </svg>
@@ -556,27 +567,29 @@
                                         </button>
                                     @endif
 
-                                    {{-- Tombol Batal Pasang (jika belum selesai/batal) --}}
-                                    @if(!in_array($item->status_reg, ['14', '15', '20']))
+                                    {{-- Sub-Aksi: Edit Data & Batal Pasang --}}
+                                    <div class="flex items-center gap-1 pt-1 border-t border-slate-100 dark:border-slate-800">
                                         <button type="button" 
-                                                @click="openBatalModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-[10px] transition font-semibold cursor-pointer">
-                                            <svg class="w-3 h-3 text-rose-500 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                @click="openEditModal('{{ $item->nomor_internet }}')"
+                                                class="flex-1 inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 border border-blue-200 dark:border-blue-900/60 text-[10px] transition font-bold cursor-pointer"
+                                                title="Edit Data Pendaftaran">
+                                            <svg class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
-                                            <span>Batal Pasang</span>
+                                            <span>Edit</span>
                                         </button>
-                                    @endif
-
-                                    {{-- Tombol Edit Pendaftaran Pelanggan --}}
-                                    <button type="button" 
-                                            @click="openEditModal('{{ $item->nomor_internet }}')"
-                                            class="inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-[10px] transition font-bold cursor-pointer">
-                                        <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                        </svg>
-                                        <span>Edit Data</span>
-                                    </button>
+                                        @if(!in_array($item->status_reg, ['14', '15', '20']))
+                                            <button type="button" 
+                                                    @click="openBatalModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="flex-1 inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 text-[10px] transition font-bold cursor-pointer"
+                                                    title="Batal Pasang">
+                                                <svg class="w-2.5 h-2.5 text-rose-500 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                                <span>Batal</span>
+                                            </button>
+                                        @endif
+                                    </div>
 
                                 </div>
                             </td>

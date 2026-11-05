@@ -9,33 +9,33 @@
     <!-- =================================================================== -->
     <!-- 1. TOP HERO HEADER BANNER                                           -->
     <!-- =================================================================== -->
-    <div class="ims-banner relative overflow-hidden rounded-xl p-3 sm:p-4 shadow-xs border border-indigo-500/20"
-         style="background: linear-gradient(108deg, #0f172a 0%, #1e1b4b 30%, #312e81 65%, #2563eb 90%, #0284c7 100%);">
+    <div class="ims-banner relative overflow-hidden rounded-xl p-3 sm:p-4 shadow-sm border border-teal-500/20 text-white"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         <div class="pointer-events-none absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
             <div class="flex items-start sm:items-center gap-2.5 sm:gap-3">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 flex items-center justify-center flex-shrink-0 shadow-inner">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-teal-500/20 border border-teal-400/30 text-teal-300 flex items-center justify-center flex-shrink-0 shadow-inner">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                 </div>
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <h2 class="text-xs sm:text-base font-bold text-white tracking-tight">
+                        <h2 class="text-xs sm:text-base font-bold text-white tracking-tight" style="color: #FFFFFF !important;">
                             Activity Log & Audit Trail MikroTik
                         </h2>
-                        <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 uppercase tracking-wide">
+                        <span class="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-teal-500/30 text-teal-200 border border-teal-400/30 uppercase tracking-wide">
                             Live Audit
                         </span>
                     </div>
-                    <p class="text-[10px] sm:text-[11px] text-slate-300 mt-0.5 line-clamp-1 sm:line-clamp-none">
+                    <p class="text-[10px] sm:text-[11px] text-[#c6edf3] mt-0.5 line-clamp-1 sm:line-clamp-none" style="color: #c6edf3 !important;">
                         Rekam jejak otomatis & manual MikroTik: aktivasi, isolir, kick session, sync, reboot ONU, dll.
                     </p>
                     
                     <!-- Stats Badges Bar (Symmetrical 2x2 on mobile, flex on desktop) -->
                     <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 mt-2">
                         <div class="inline-flex items-center justify-center sm:justify-start gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-slate-900/80 text-slate-200 border border-slate-700/60 shadow-xs">
-                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-teal-400 flex-shrink-0"></span>
                             <span class="truncate">Total: {{ number_format($totalLogs) }}</span>
                         </div>
                         <div class="inline-flex items-center justify-center sm:justify-start gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-slate-900/80 text-emerald-300 border border-emerald-500/30 shadow-xs">
@@ -300,14 +300,21 @@
                             <!-- Customer / Target -->
                             <td class="py-2.5 px-2.5">
                                 @if($log->customer_id && $log->customer_id !== '-')
-                                    <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1 text-xs">
-                                        <span class="font-mono text-cyan-500 dark:text-cyan-400 whitespace-nowrap">{{ $log->display_customer_id ?? $log->customer_id }}</span>
-                                    </div>
-                                    @if(!empty($log->nama_pelanggan))
-                                        <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[130px] font-semibold" title="{{ $log->nama_pelanggan }}">
-                                            {{ $log->nama_pelanggan }}
+                                    @php
+                                        $targetNoInternet = $log->display_customer_id ?? $log->customer_id;
+                                    @endphp
+                                    <a href="{{ route('teknik.pelanggan.profile', $targetNoInternet) }}" 
+                                       class="group block transition"
+                                       title="Buka Profile Pelanggan ({{ $targetNoInternet }})">
+                                        <div class="font-bold flex items-center gap-1 text-xs">
+                                            <span class="font-mono text-cyan-600 dark:text-cyan-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline whitespace-nowrap">{{ $targetNoInternet }}</span>
                                         </div>
-                                    @endif
+                                        @if(!empty($log->nama_pelanggan))
+                                            <div class="text-[10px] text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline truncate max-w-[130px] font-semibold uppercase mt-0.5" title="{{ $log->nama_pelanggan }}">
+                                                {{ $log->nama_pelanggan }}
+                                            </div>
+                                        @endif
+                                    </a>
                                 @else
                                     <span class="text-slate-400 italic text-[10px]">System / Master</span>
                                 @endif
@@ -459,12 +466,17 @@
 
                     <!-- Target Pelanggan / Target ID -->
                     @if($log->customer_id && $log->customer_id !== '-')
-                        <div class="flex items-center gap-1.5 text-xs">
-                            <span class="font-mono text-cyan-500 dark:text-cyan-400 font-bold">{{ $log->display_customer_id ?? $log->customer_id }}</span>
+                        @php
+                            $targetNoInternetMobile = $log->display_customer_id ?? $log->customer_id;
+                        @endphp
+                        <a href="{{ route('teknik.pelanggan.profile', $targetNoInternetMobile) }}" 
+                           class="group inline-flex items-center gap-1.5 text-xs transition"
+                           title="Buka Profile Pelanggan ({{ $targetNoInternetMobile }})">
+                            <span class="font-mono text-cyan-600 dark:text-cyan-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline font-bold">{{ $targetNoInternetMobile }}</span>
                             @if(!empty($log->nama_pelanggan))
-                                <span class="text-slate-400 font-medium text-[11px] truncate">· {{ $log->nama_pelanggan }}</span>
+                                <span class="text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline font-semibold text-[11px] truncate uppercase">· {{ $log->nama_pelanggan }}</span>
                             @endif
-                        </div>
+                        </a>
                     @endif
 
                     <!-- Description & Output Response -->

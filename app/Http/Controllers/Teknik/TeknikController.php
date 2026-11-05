@@ -2790,9 +2790,26 @@ class TeknikController extends Controller
      */
     public function profilePelanggan(Request $request, string $nomorInternet): View
     {
+        $cleanNoInternet = preg_replace('/^MS/i', '', $nomorInternet);
+        $withMs = 'MS' . $cleanNoInternet;
+
         $customer = DB::table('view_batchjob')
-            ->where('nomor_internet', $nomorInternet)
+            ->where(function ($q) use ($nomorInternet, $cleanNoInternet, $withMs) {
+                $q->where('nomor_internet', $nomorInternet)
+                  ->orWhere('nomor_internet', $cleanNoInternet)
+                  ->orWhere('nomor_internet', $withMs);
+            })
             ->first();
+
+        if (!$customer && Schema::hasTable('trx_batchjob_register')) {
+            $customer = DB::table('trx_batchjob_register')
+                ->where(function ($q) use ($nomorInternet, $cleanNoInternet, $withMs) {
+                    $q->where('nomor_internet', $nomorInternet)
+                      ->orWhere('nomor_internet', $cleanNoInternet)
+                      ->orWhere('nomor_internet', $withMs);
+                })
+                ->first();
+        }
 
         if (!$customer) {
             abort(404, "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan.");
@@ -2800,7 +2817,7 @@ class TeknikController extends Controller
 
         // Attach olt and ensure property exists
         $regRecord = Schema::hasTable('trx_batchjob_register') 
-            ? DB::table('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->first() 
+            ? DB::table('trx_batchjob_register')->where('nomor_internet', $customer->nomor_internet ?? $nomorInternet)->first() 
             : null;
         if ($regRecord) {
             foreach ($regRecord as $k => $v) {

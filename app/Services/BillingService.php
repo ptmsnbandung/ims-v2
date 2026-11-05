@@ -257,6 +257,11 @@ class BillingService
             $actDate = Carbon::now('Asia/Jakarta');
         }
 
+        // Guard: jika tanggal aktivasi tidak valid / unix epoch (<= 1970), fallback ke waktu sekarang
+        if ($actDate->year <= 1970) {
+            $actDate = Carbon::now('Asia/Jakarta');
+        }
+
         $bulan = $actDate->format('m');
         $tahun = $actDate->format('Y');
         $currentDay = (int) $actDate->format('d');

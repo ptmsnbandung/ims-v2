@@ -487,10 +487,10 @@
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/70 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                <th class="py-3.5 px-6 w-48">Status Order</th>
-                                <th class="py-3.5 px-6">Keterangan</th>
-                                <th class="py-3.5 px-6 w-52 whitespace-nowrap">Tanggal Update</th>
-                                <th class="py-3.5 px-6 w-44 whitespace-nowrap">User Update</th>
+                                <th class="py-3 px-4 w-[160px] whitespace-nowrap">Status Order</th>
+                                <th class="py-3 px-4 min-w-[340px]">Keterangan</th>
+                                <th class="py-3 px-4 w-[160px] whitespace-nowrap">Tanggal Update</th>
+                                <th class="py-3 px-4 w-[130px] whitespace-nowrap">User Update</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
@@ -517,15 +517,15 @@
                                 <tr class="hover:bg-blue-50/20 dark:hover:bg-slate-800/40 transition duration-150">
                                     
                                     <!-- 1. Status Order -->
-                                    <td class="py-4 px-6 align-top space-y-1.5">
+                                    <td class="py-3 px-4 align-top whitespace-nowrap">
                                         <div>
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-tight border shadow-xs whitespace-nowrap {{ $badgeClass }}">
+                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-tight border shadow-2xs whitespace-nowrap {{ $badgeClass }}">
                                                 <span class="w-1.5 h-1.5 rounded-full {{ $dotClass }} shrink-0"></span>
                                                 <span>{{ $log->desc_registrasi ?: 'Status #' . $log->status_reg }}</span>
                                             </span>
                                         </div>
                                         @if($log->date_schedule || $log->time_schedule)
-                                            <div class="inline-flex items-center gap-1.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded border border-slate-200/70 dark:border-slate-700/60 whitespace-nowrap">
+                                            <div class="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
                                                 <svg class="w-3 h-3 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                 </svg>
@@ -538,24 +538,24 @@
                                     </td>
 
                                     <!-- 2. Keterangan -->
-                                    <td class="py-4 px-6 align-top space-y-1.5 text-slate-700 dark:text-slate-300">
+                                    <td class="py-3 px-4 align-top text-slate-700 dark:text-slate-300">
                                         <div class="font-bold text-slate-900 dark:text-slate-100 uppercase text-xs tracking-tight">
                                             {{ $log->note_schedule ? 'POSTING ' . strtoupper($log->desc_registrasi) : ($log->kat_log ? 'LOG AKTIVITAS #' . $log->kat_log : 'UPDATE STATUS') }}
                                         </div>
                                         @if($log->note_schedule)
-                                            <div class="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                                            <div class="mt-0.5 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                                                 <span class="font-semibold text-slate-700 dark:text-slate-300">Catatan:</span>
-                                                <span class="text-slate-800 dark:text-slate-200 font-normal ml-1">{{ $log->note_schedule }}</span>
+                                                <span class="text-slate-800 dark:text-slate-200 font-normal ml-0.5">{{ $log->note_schedule }}</span>
                                             </div>
                                         @endif
                                     </td>
 
                                     <!-- 3. Tanggal Update -->
-                                    <td class="py-4 px-6 align-top whitespace-nowrap">
+                                    <td class="py-3 px-4 align-top whitespace-nowrap">
                                         <div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">
                                             {{ \Carbon\Carbon::parse($log->date_create)->translatedFormat('d M Y') }}
                                         </div>
-                                        <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                        <div class="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                                             <svg class="w-3 h-3 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
@@ -564,9 +564,9 @@
                                     </td>
 
                                     <!-- 4. User Update -->
-                                    <td class="py-4 px-6 align-top whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-2">
-                                            <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0 uppercase shadow-2xs">
+                                    <td class="py-3 px-4 align-top whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <div class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0 uppercase shadow-2xs">
                                                 {{ substr($log->user_create ?: 'S', 0, 1) }}
                                             </div>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200 uppercase text-xs tracking-tight">
@@ -577,32 +577,32 @@
                                 </tr>
                             @empty
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
-                                    <td class="py-4 px-6 align-top space-y-1.5">
+                                    <td class="py-3 px-4 align-top whitespace-nowrap">
                                         <div>
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60 shadow-xs whitespace-nowrap">
+                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60 shadow-2xs whitespace-nowrap">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
                                                 <span>{{ $customer->desc_registrasi ?? 'Registrasi' }}</span>
                                             </span>
                                         </div>
-                                        <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                        <div class="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-1">
                                             {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d M Y') : '-' }}
                                         </div>
                                     </td>
-                                    <td class="py-4 px-6 align-top space-y-1.5 text-slate-700 dark:text-slate-300">
+                                    <td class="py-3 px-4 align-top text-slate-700 dark:text-slate-300">
                                         <div class="font-bold text-slate-900 dark:text-slate-100 uppercase text-xs tracking-tight">
                                             REGISTRASI PELANGGAN BARU
                                         </div>
-                                        <div class="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                                        <div class="mt-0.5 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                                             <span class="font-semibold text-slate-700 dark:text-slate-300">Sales:</span>
-                                            <span class="text-slate-800 dark:text-slate-200 font-normal ml-1">{{ $customer->nama_sales ?: '-' }}</span>
+                                            <span class="text-slate-800 dark:text-slate-200 font-normal ml-0.5">{{ $customer->nama_sales ?: '-' }}</span>
                                         </div>
                                     </td>
-                                    <td class="py-4 px-6 align-top whitespace-nowrap">
+                                    <td class="py-3 px-4 align-top whitespace-nowrap">
                                         <div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">
                                             {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d M Y') : '-' }}
                                         </div>
                                         @if($customer->date_create)
-                                            <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                            <div class="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                                                 <svg class="w-3 h-3 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                 </svg>
@@ -610,9 +610,9 @@
                                             </div>
                                         @endif
                                     </td>
-                                    <td class="py-4 px-6 align-top whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-2">
-                                            <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0 uppercase shadow-2xs">
+                                    <td class="py-3 px-4 align-top whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <div class="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0 uppercase shadow-2xs">
                                                 {{ substr($customer->user_create ?: 'D', 0, 1) }}
                                             </div>
                                             <span class="font-semibold text-slate-800 dark:text-slate-200 uppercase text-xs tracking-tight">

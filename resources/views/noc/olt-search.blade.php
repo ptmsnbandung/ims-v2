@@ -126,31 +126,47 @@
 
             <!-- Search Type Criteria (Pills) -->
             <div class="flex flex-wrap items-center gap-2 pt-1">
-                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1">Kategori Cari:</span>
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1 uppercase tracking-wider">Kategori Cari:</span>
                 
-                <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border cursor-pointer transition {{ $searchType === 'all' ? 'bg-sky-500/10 border-sky-500 text-sky-600 dark:text-sky-400 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800' }}">
+                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition duration-150 {{ $searchType === 'all' ? 'bg-sky-50 dark:bg-sky-950/70 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs' : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white' }}">
                     <input type="radio" name="type" value="all" {{ $searchType === 'all' ? 'checked' : '' }} onchange="this.form.submit()" class="hidden">
-                    <span>🌐 Semua Kriteria</span>
+                    <svg class="w-3.5 h-3.5 {{ $searchType === 'all' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                    </svg>
+                    <span>Semua Kriteria</span>
                 </label>
 
-                <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border cursor-pointer transition {{ $searchType === 'odp' ? 'bg-sky-500/10 border-sky-500 text-sky-600 dark:text-sky-400 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800' }}">
+                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition duration-150 {{ $searchType === 'odp' ? 'bg-sky-50 dark:bg-sky-950/70 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs' : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white' }}">
                     <input type="radio" name="type" value="odp" {{ $searchType === 'odp' ? 'checked' : '' }} onchange="this.form.submit()" class="hidden">
-                    <span>📍 Nama ODP</span>
+                    <svg class="w-3.5 h-3.5 {{ $searchType === 'odp' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                    <span>Nama ODP</span>
                 </label>
 
-                <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border cursor-pointer transition {{ $searchType === 'user' ? 'bg-sky-500/10 border-sky-500 text-sky-600 dark:text-sky-400 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800' }}">
+                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition duration-150 {{ $searchType === 'user' ? 'bg-sky-50 dark:bg-sky-950/70 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs' : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white' }}">
                     <input type="radio" name="type" value="user" {{ $searchType === 'user' ? 'checked' : '' }} onchange="this.form.submit()" class="hidden">
-                    <span>👤 Nama User</span>
+                    <svg class="w-3.5 h-3.5 {{ $searchType === 'user' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                    <span>Nama User</span>
                 </label>
 
-                <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border cursor-pointer transition {{ $searchType === 'internet' ? 'bg-sky-500/10 border-sky-500 text-sky-600 dark:text-sky-400 font-bold' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800' }}">
+                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition duration-150 {{ $searchType === 'internet' ? 'bg-sky-50 dark:bg-sky-950/70 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs' : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white' }}">
                     <input type="radio" name="type" value="internet" {{ $searchType === 'internet' ? 'checked' : '' }} onchange="this.form.submit()" class="hidden">
-                    <span>🔢 Nomor Internet</span>
+                    <svg class="w-3.5 h-3.5 {{ $searchType === 'internet' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.25 8.25h13.5m-13.5 7.5h13.5m-1.5-12-3 16.5m-6-16.5-3 16.5" />
+                    </svg>
+                    <span>Nomor Internet</span>
                 </label>
 
                 @if($q !== '' || !empty($filterOlt))
-                    <a href="{{ route('noc.network-olt.search') }}" class="text-[11px] text-rose-500 hover:underline ml-auto font-medium">
-                        Reset Filter
+                    <a href="{{ route('noc.network-olt.search') }}" class="inline-flex items-center gap-1 text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 ml-auto font-semibold transition">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span>Reset Filter</span>
                     </a>
                 @endif
             </div>
@@ -177,7 +193,10 @@
         @if($matchedOdps->isNotEmpty())
             <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2 shadow-2xs">
                 <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                    <span class="text-rose-500 font-bold">📍</span>
+                    <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
                     <span>Titik ODP yang Cocok dengan "{{ $q }}":</span>
                     <span class="text-[10px] text-slate-500 font-mono font-bold">({{ $matchedOdps->count() }} ODP)</span>
                 </div>
@@ -190,8 +209,10 @@
                                     OLT {{ $mOdp->olt_id }}
                                 </span>
                             </div>
-                            <div class="text-[11px] text-slate-600 dark:text-slate-400 truncate flex items-center gap-1 font-mono">
-                                <span>🔌</span>
+                            <div class="text-[11px] text-slate-600 dark:text-slate-400 truncate flex items-center gap-1.5 font-mono">
+                                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                                </svg>
                                 <span>{{ $mOdp->nama_pon ?: 'PON -' }}</span>
                             </div>
                             <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-mono pt-1 border-t border-slate-100 dark:border-slate-800/80">
@@ -237,8 +258,11 @@
                                             AKTIF
                                         </span>
                                         @if(!empty($r->speed) && $r->speed !== '-')
-                                            <span class="text-[9.5px] font-mono font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950 px-1.5 py-0.2 rounded border border-sky-200 dark:border-sky-800">
-                                                ⚡ {{ $r->speed }}
+                                            <span class="text-[9.5px] font-mono font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800 inline-flex items-center gap-1">
+                                                <svg class="w-2.5 h-2.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                                                </svg>
+                                                <span>{{ $r->speed }}</span>
                                             </span>
                                         @endif
                                         @if(!empty($r->keterangan))
@@ -288,7 +312,10 @@
                                 <!-- ODP Mana -->
                                 <td class="py-3 px-3">
                                     <div class="flex items-center gap-1 font-bold text-slate-900 dark:text-white text-xs leading-tight">
-                                        <span class="text-rose-500">📍</span>
+                                        <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                        </svg>
                                         <span>{{ $r->nama_odp ?: 'ODP -' }}</span>
                                     </div>
                                     <span class="text-[10px] text-slate-500 font-mono block mt-0.5">
@@ -310,7 +337,10 @@
                                                 }
                                             @endphp
                                             <a href="https://wa.me/{{ $cleanWa }}" target="_blank" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 hover:underline font-bold" title="Kirim WhatsApp">
-                                                <span>💬 {{ $r->nomor_hp }}</span>
+                                                <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-.774-.75 4.5 4.5 0 0 1 1.05-2.73A8.134 8.134 0 0 1 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                                                </svg>
+                                                <span>{{ $r->nomor_hp }}</span>
                                             </a>
                                             <button 
                                                 type="button" 
@@ -323,7 +353,12 @@
                                                 </svg>
                                             </button>
                                         @else
-                                            <span>📞 -</span>
+                                            <span class="inline-flex items-center gap-1 text-slate-400">
+                                                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                                                </svg>
+                                                <span>-</span>
+                                            </span>
                                         @endif
                                     </div>
                                 </td>
@@ -390,40 +425,62 @@
         <!-- ── 4. IDLE STATE: PANDUAN PENCARIAN & KARTU FITUR ── -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
             
-            <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-sky-500/50 transition">
-                <div class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-sm">
-                    📍
+            <!-- Card 1: Nama ODP -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 shadow-xs hover:shadow-md hover:border-sky-500/40 dark:hover:border-sky-500/40 transition duration-200 group flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                            Cari Berdasarkan Nama ODP
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1.5">
+                            Ketik nama ODP (contoh: <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">MSN REOG</span> atau <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">POS RAJA MANTRI</span>) untuk menampilkan seluruh pelanggan yang terhubung pada ODP tersebut beserta OLT dan PON induknya.
+                        </p>
+                    </div>
                 </div>
-                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    Cari Berdasarkan Nama ODP
-                </h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Ketik nama ODP (contoh: <code class="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10px]">MSN REOG</code> atau <code class="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10px]">POS RAJA MANTRI</code>) untuk menampilkan seluruh pelanggan yang terhubung pada ODP tersebut beserta OLT dan PON induknya.
-                </p>
             </div>
 
-            <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-emerald-500/50 transition">
-                <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
-                    👤
+            <!-- Card 2: Nama User -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 shadow-xs hover:shadow-md hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition duration-200 group flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                            Cari Berdasarkan Nama User
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1.5">
+                            Ketik nama pelanggan (contoh: <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">IRMAWATI</span> atau <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">Dodi</span>) untuk mengetahui di OLT mana, port PON ke berapa, dan ODP mana perangkat pelanggan berada.
+                        </p>
+                    </div>
                 </div>
-                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    Cari Berdasarkan Nama User
-                </h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Ketik nama pelanggan (contoh: <code class="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10px]">IRMAWATI</code> atau <code class="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10px]">Dodi</code>) untuk mengetahui di OLT mana, port PON ke berapa, dan ODP mana perangkat pelanggan berada.
-                </p>
             </div>
 
-            <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 hover:border-purple-500/50 transition">
-                <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-sm">
-                    🔢
+            <!-- Card 3: Nomor Internet -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 shadow-xs hover:shadow-md hover:border-indigo-500/40 dark:hover:border-indigo-500/40 transition duration-200 group flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.25 8.25h13.5m-13.5 7.5h13.5m-1.5-12-3 16.5m-6-16.5-3 16.5" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                            Cari Nomor Internet
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1.5">
+                            Ketik nomor internet pelanggan (contoh: <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">3511221</span>) untuk langsung melacak identitas fisik topologi OLT, PON, dan ODP pelanggan saat menangani keluhan atau tiket gangguan.
+                        </p>
+                    </div>
                 </div>
-                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    Cari Nomor Internet
-                </h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Ketik nomor internet pelanggan (contoh: <code class="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10px]">3511221</code>) untuk langsung melacak identitas fisik topologi OLT, PON, dan ODP pelanggan saat menangani keluhan atau tiket gangguan.
-                </p>
             </div>
 
         </div>

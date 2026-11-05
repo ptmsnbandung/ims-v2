@@ -2564,6 +2564,12 @@ class TeknikController extends Controller
             }
         }
 
+        // Filter: Sales
+        if ($request->filled('sales')) {
+            $sales = trim($request->sales);
+            $query->where('nama_sales', 'like', '%' . $sales . '%');
+        }
+
         $pelanggan = $query->orderBy('date_create', 'desc')
                            ->orderBy('nomor_internet', 'desc')
                            ->paginate($perPage)
@@ -2642,6 +2648,15 @@ class TeknikController extends Controller
             $groupLayananList->prepend('MEDIANET');
         }
 
+        // Master data sales dari data view_batchjob
+        $salesList = DB::table('view_batchjob')
+            ->whereNotNull('nama_sales')
+            ->where('nama_sales', '!=', '')
+            ->where('nama_sales', '!=', '-')
+            ->distinct()
+            ->orderBy('nama_sales')
+            ->pluck('nama_sales');
+
         return view('teknik.pelanggan', [
             'user' => $request->user(),
             'pelanggan' => $pelanggan,
@@ -2649,9 +2664,10 @@ class TeknikController extends Controller
             'groupLayananList' => $groupLayananList,
             'statusList' => $statusList,
             'wilayahList' => $wilayahList,
+            'salesList' => $salesList,
             'paketList' => $paketList,
             'bwCounts' => $bwCounts,
-            'filters' => array_merge($request->only(['layanan', 'group_layanan', 'search', 'alamat', 'wilayah', 'bulan', 'per_page']), ['status' => $statusFilter]),
+            'filters' => array_merge($request->only(['layanan', 'group_layanan', 'search', 'alamat', 'wilayah', 'bulan', 'sales', 'per_page']), ['status' => $statusFilter]),
         ]);
     }
 
@@ -2744,6 +2760,12 @@ class TeknikController extends Controller
                 $query->where('date_create', 'like', "{$bulan}%");
                 $filterLabel .= ' | Periode: ' . $bulan;
             }
+        }
+
+        if ($request->filled('sales')) {
+            $sales = trim($request->sales);
+            $query->where('nama_sales', 'like', '%' . $sales . '%');
+            $filterLabel .= ' | Sales: ' . $sales;
         }
 
         $totalRecords = (clone $query)->count();

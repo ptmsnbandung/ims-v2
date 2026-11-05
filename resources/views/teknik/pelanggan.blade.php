@@ -28,6 +28,7 @@
          statusFilter: '{{ $filters['status'] ?? 'all' }}',
          wilayahFilter: '{{ $filters['wilayah'] ?? '' }}',
          bulanFilter: '{{ $filters['bulan'] ?? '' }}',
+         salesFilter: '{{ $filters['sales'] ?? '' }}',
          perPageFilter: '{{ $filters['per_page'] ?? '10' }}',
          isLoading: false,
          filterDebounceTimer: null,
@@ -62,6 +63,7 @@
                  if (this.statusFilter) params.append('status', this.statusFilter);
                  if (this.wilayahFilter) params.append('wilayah', this.wilayahFilter);
                  if (this.bulanFilter) params.append('bulan', this.bulanFilter);
+                 if (this.salesFilter) params.append('sales', this.salesFilter);
                  if (this.perPageFilter) params.append('per_page', this.perPageFilter);
                  url = '{{ route($pelangganRoute) }}?' + params.toString();
              }
@@ -113,6 +115,7 @@
              this.statusFilter = 'all';
              this.wilayahFilter = '';
              this.bulanFilter = '';
+             this.salesFilter = '';
              this.perPageFilter = '10';
              this.activeTab = 'all';
              this.fetchData('{{ route($pelangganRoute) }}?status=all&per_page=10');
@@ -695,7 +698,7 @@
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
         <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm" @submit.prevent="fetchData()" onsubmit="return false;" data-no-auto-search="true" data-ajax="true">
-            <!-- 7 Kolom Filter Responsif (4 Kolom Baris 1, 3 Kolom Baris 2) -->
+            <!-- 8 Kolom Filter Responsif (4 Kolom Baris 1, 4 Kolom Baris 2) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
                 
                 <!-- 1. Search No Internet / Nama / NIK / HP (Paling Kiri - Focused) -->
@@ -829,6 +832,22 @@
                         @foreach($wilayahList as $wilayah)
                             <option value="{{ $wilayah->name_w }}" {{ ($filters['wilayah'] ?? '') == $wilayah->name_w ? 'selected' : '' }}>
                                 {{ $wilayah->name_w }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- 8. Dropdown Semua Sales -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Sales</label>
+                    <select name="sales" 
+                            x-model="salesFilter"
+                            @change="fetchData()"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
+                        <option value="">SEMUA SALES</option>
+                        @foreach($salesList as $sales)
+                            <option value="{{ $sales }}" {{ ($filters['sales'] ?? '') == $sales ? 'selected' : '' }}>
+                                {{ strtoupper($sales) }}
                             </option>
                         @endforeach
                     </select>

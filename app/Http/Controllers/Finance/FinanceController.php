@@ -4538,6 +4538,36 @@ class FinanceController extends Controller
             $perPage = 15;
         }
 
+        // Master Dropdown Data Bulan & Tahun
+        $bulanList = [
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember',
+        ];
+
+        $currentYear = (int) date('Y');
+        $tahunList = [
+            (string) ($currentYear + 1),
+            (string) $currentYear,
+            (string) ($currentYear - 1),
+            (string) ($currentYear - 2),
+            (string) ($currentYear - 3)
+        ];
+
+        // Filter Parameter: Bulan, Tahun, dan Saluran Bayar (Portal, Cash, Transfer Manual)
+        $selectedBulan = $request->has('bulan') ? (string) $request->input('bulan', '') : (string) date('m');
+        $selectedTahun = $request->has('tahun') ? (string) $request->input('tahun', '') : (string) date('Y');
+        $selectedMetode = (string) $request->input('metode', ''); // '', 'portal', 'cash', 'manual_finance'
+
         // 1. Ambil Payment Confirmations dari local database DAN cross-db ptmsn.payment_confirmations
         $confirmations = collect();
         $seenConfKeys = [];
@@ -4552,6 +4582,24 @@ class FinanceController extends Controller
                 } elseif ($tab === 'approved') {
                     $qConf->where('status', 'approved');
                 }
+
+                if ($selectedBulan !== '') {
+                    $bPad = str_pad($selectedBulan, 2, '0', STR_PAD_LEFT);
+                    $bInt = (int) $selectedBulan;
+                    $qConf->where(function ($q) use ($bPad, $bInt) {
+                        $q->whereMonth('created_at', $bInt)
+                          ->orWhere('kode_billing_layanan', 'like', "%/{$bPad}/%")
+                          ->orWhere('kode_billing_layanan', 'like', "%-{$bPad}-%");
+                    });
+                }
+                if ($selectedTahun !== '') {
+                    $qConf->where(function ($q) use ($selectedTahun) {
+                        $q->whereYear('created_at', $selectedTahun)
+                          ->orWhere('kode_billing_layanan', 'like', "%/{$selectedTahun}%")
+                          ->orWhere('kode_billing_layanan', 'like', "%-{$selectedTahun}%");
+                    });
+                }
+
                 if ($search !== '') {
                     $qConf->where(function ($q) use ($search) {
                         $q->where('kode_billing_layanan', 'like', "%{$search}%")
@@ -4559,7 +4607,7 @@ class FinanceController extends Controller
                           ->orWhere('customer_name', 'like', "%{$search}%");
                     });
                 }
-                $localConfs = $qConf->orderByDesc('id')->limit(150)->get();
+                $localConfs = $qConf->orderByDesc('id')->limit(300)->get();
                 foreach ($localConfs as $lc) {
                     $k = $lc->kode_billing_layanan ?? '';
                     $key = 'loc_' . ($lc->id ?? '') . '_' . $k;
@@ -4586,11 +4634,22 @@ class FinanceController extends Controller
             } elseif ($tab === 'approved') {
                 $wherePtmsn .= " AND status = 'approved'";
             }
+
+            if ($selectedBulan !== '') {
+                $bPad = str_pad($selectedBulan, 2, '0', STR_PAD_LEFT);
+                $bInt = (int) $selectedBulan;
+                $wherePtmsn .= " AND (MONTH(created_at) = {$bInt} OR kode_billing_layanan LIKE '%/{$bPad}/%' OR kode_billing_layanan LIKE '%-{$bPad}-%')";
+            }
+            if ($selectedTahun !== '') {
+                $sThn = (int) $selectedTahun;
+                $wherePtmsn .= " AND (YEAR(created_at) = {$sThn} OR kode_billing_layanan LIKE '%/{$sThn}%' OR kode_billing_layanan LIKE '%-{$sThn}%')";
+            }
+
             if ($search !== '') {
                 $escapedSearch = addslashes($search);
                 $wherePtmsn .= " AND (kode_billing_layanan LIKE '%{$escapedSearch}%' OR customer_id LIKE '%{$escapedSearch}%' OR customer_name LIKE '%{$escapedSearch}%')";
             }
-            $ptmsnConfs = DB::select("SELECT * FROM ptmsn.payment_confirmations {$wherePtmsn} ORDER BY id DESC LIMIT 150");
+            $ptmsnConfs = DB::select("SELECT * FROM ptmsn.payment_confirmations {$wherePtmsn} ORDER BY id DESC LIMIT 200");
             foreach ($ptmsnConfs as $pc) {
                 $pc->is_ptmsn_source = true;
                 $k = $pc->kode_billing_layanan ?? '';
@@ -4651,10 +4710,14 @@ class FinanceController extends Controller
             ->whereDate(DB::raw('COALESCE(payment_paid, date_update)'), Carbon::today())
             ->count();
 
+        // Hitung total lunas bulan yang dipilih (atau bulan berjalan)
+        $kpiFilterYear = $selectedTahun !== '' ? (int)$selectedTahun : Carbon::now()->year;
+        $kpiFilterMonth = $selectedBulan !== '' ? (int)$selectedBulan : Carbon::now()->month;
+
         $kpiMonthPaidAmount = (float) DB::table('trx_billing_layanan')
             ->where('status_bill_lay', '15')
-            ->whereYear(DB::raw('COALESCE(payment_paid, date_update)'), Carbon::now()->year)
-            ->whereMonth(DB::raw('COALESCE(payment_paid, date_update)'), Carbon::now()->month)
+            ->whereYear(DB::raw('COALESCE(payment_paid, date_update)'), $kpiFilterYear)
+            ->whereMonth(DB::raw('COALESCE(payment_paid, date_update)'), $kpiFilterMonth)
             ->sum(DB::raw('CAST(COALESCE(amount_paid, total_layanan, 0) AS DECIMAL(15,2))'));
 
         // 3. Query Invoices from trx_billing_layanan
@@ -4694,6 +4757,37 @@ class FinanceController extends Controller
             });
         }
 
+        // Filter Bulan & Tahun pada query billing
+        if ($selectedBulan !== '') {
+            $bPad = str_pad($selectedBulan, 2, '0', STR_PAD_LEFT);
+            $bInt = (int) $selectedBulan;
+            $qBill->where(function ($q) use ($bPad, $bInt, $pendingKodeBillings) {
+                $q->where(function ($sub) use ($bPad, $bInt) {
+                    $sub->whereMonth(DB::raw('COALESCE(trx_billing_layanan.payment_paid, trx_billing_layanan.date_update)'), $bInt)
+                        ->orWhere('trx_billing_layanan.bulan_tagihan', $bPad)
+                        ->orWhere('trx_billing_layanan.bulan_tagihan', (string)$bInt);
+                });
+                // Invoice menunggu approval jangan sampai tersembunyi
+                if (!empty($pendingKodeBillings)) {
+                    $q->orWhereIn('trx_billing_layanan.kode_billing_layanan', $pendingKodeBillings);
+                }
+                $q->orWhere('trx_billing_layanan.status_bill_lay', '14');
+            });
+        }
+
+        if ($selectedTahun !== '') {
+            $qBill->where(function ($q) use ($selectedTahun, $pendingKodeBillings) {
+                $q->where(function ($sub) use ($selectedTahun) {
+                    $sub->whereYear(DB::raw('COALESCE(trx_billing_layanan.payment_paid, trx_billing_layanan.date_update, trx_billing_layanan.date_create)'), $selectedTahun)
+                        ->orWhere('trx_billing_layanan.tahun_tagihan', $selectedTahun);
+                });
+                if (!empty($pendingKodeBillings)) {
+                    $q->orWhereIn('trx_billing_layanan.kode_billing_layanan', $pendingKodeBillings);
+                }
+                $q->orWhere('trx_billing_layanan.status_bill_lay', '14');
+            });
+        }
+
         if ($search !== '') {
             $qBill->where(function ($q) use ($search, $tableCustomer) {
                 $q->where('trx_billing_layanan.kode_billing_layanan', 'like', "%{$search}%")
@@ -4713,11 +4807,13 @@ class FinanceController extends Controller
             'trx_billing_layanan.payment_paid',
             'trx_billing_layanan.date_update',
             'trx_billing_layanan.date_create',
+            'trx_billing_layanan.bulan_tagihan',
+            'trx_billing_layanan.tahun_tagihan',
             "{$tableCustomer}.nama_pelanggan",
         ])
         ->orderByRaw("CASE WHEN trx_billing_layanan.status_bill_lay != '15' THEN 0 ELSE 1 END")
         ->orderByDesc(DB::raw('COALESCE(trx_billing_layanan.payment_paid, trx_billing_layanan.date_update, trx_billing_layanan.date_create)'))
-        ->limit(200)
+        ->limit(500)
         ->get();
 
         // 4. Transform & Gabungkan Data Notifikasi
@@ -4991,16 +5087,34 @@ class FinanceController extends Controller
             ]);
         }
 
+        // 5. Hitung Breakdown Statistik Saluran Pembayaran untuk Header Hijau
+        // Dihitung dari seluruh transaksi pada periode bulan & tahun yang dipilih sebelum filter metode diterapkan
+        $countPortal = $items->filter(fn($item) => ($item->source_type ?? '') === 'portal' || ($item->is_portal ?? false) === true)->count();
+        $countCash = $items->filter(fn($item) => ($item->source_type ?? '') === 'cash')->count();
+        $countManual = $items->filter(fn($item) => ($item->source_type ?? '') === 'manual_finance')->count();
+
+        // 6. Filter Berdasarkan Saluran Pembayaran (Bayar Lewat Mana)
+        if ($selectedMetode !== '') {
+            if ($selectedMetode === 'portal') {
+                $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'portal' || ($item->is_portal ?? false) === true);
+            } elseif ($selectedMetode === 'cash') {
+                $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'cash');
+            } elseif (in_array($selectedMetode, ['manual_finance', 'manual', 'transfer_manual'])) {
+                $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'manual_finance');
+            }
+        }
+
+        // Pencarian Teks
         if ($search !== '') {
             $sLower = strtolower($search);
             if (in_array($sLower, ['portal', 'portal pelanggan', 'portal-pelanggan'])) {
-                $items = $items->filter(fn($item) => $item->is_portal === true);
+                $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'portal' || ($item->is_portal ?? false) === true);
             } elseif (in_array($sLower, ['manual', 'finance', 'manual finance', 'transfer manual'])) {
                 $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'manual_finance');
             } elseif (in_array($sLower, ['cash', 'kolektor', 'tunai'])) {
                 $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'cash');
             } elseif (in_array($sLower, ['bukan portal', 'non portal', 'non-portal'])) {
-                $items = $items->filter(fn($item) => $item->is_portal === false);
+                $items = $items->filter(fn($item) => ($item->is_portal ?? false) === false);
             }
         }
 
@@ -5034,6 +5148,14 @@ class FinanceController extends Controller
             'tab' => $tab,
             'search' => $search,
             'perPage' => $perPage,
+            'selectedBulan' => $selectedBulan,
+            'selectedTahun' => $selectedTahun,
+            'selectedMetode' => $selectedMetode,
+            'bulanList' => $bulanList,
+            'tahunList' => $tahunList,
+            'countPortal' => $countPortal,
+            'countCash' => $countCash,
+            'countManual' => $countManual,
             'kpiPendingCount' => $kpiPendingCount,
             'kpiTodayCount' => $kpiTodayCount,
             'kpiMonthPaidAmount' => $kpiMonthPaidAmount,

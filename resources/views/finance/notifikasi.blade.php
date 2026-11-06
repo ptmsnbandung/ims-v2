@@ -281,6 +281,114 @@
                 </a>
             </div>
         </div>
+
+        <!-- Breakdown Statistik Saluran Pembayaran di Header Hijau -->
+        <div class="relative z-10 mt-3 pt-3 border-t border-teal-400/20">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2 text-xs text-teal-100 font-semibold">
+                    <svg class="w-4 h-4 text-cyan-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                    </svg>
+                    <span>Rincian Saluran Pembayaran Masuk</span>
+                    <span class="text-[11px] text-teal-200/80 font-normal">
+                        ({{ $selectedBulan ? ($bulanList[$selectedBulan] ?? $selectedBulan) : 'Semua Bulan' }} {{ $selectedTahun ?: date('Y') }})
+                    </span>
+                </div>
+                @if($selectedMetode !== '')
+                    <a href="{{ route('finance.notifikasi', ['tab' => $tab, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'search' => $search, 'per_page' => $perPage]) }}"
+                       class="text-[11px] text-cyan-200 hover:text-white underline font-medium">
+                        Tampilkan Semua Saluran
+                    </a>
+                @endif
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <!-- 1. Portal Pelanggan -->
+                <a href="{{ route('finance.notifikasi', ['tab' => $tab, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => ($selectedMetode === 'portal' ? '' : 'portal'), 'search' => $search, 'per_page' => $perPage]) }}"
+                   class="group flex items-center justify-between p-2.5 rounded-xl transition duration-200 border {{ $selectedMetode === 'portal' ? 'bg-cyan-500/30 border-cyan-300 ring-2 ring-cyan-400/40 shadow-sm' : 'bg-black/15 hover:bg-black/25 border-white/15' }}"
+                   title="{{ $selectedMetode === 'portal' ? 'Klik untuk membatalkan filter' : 'Filter hanya pembayaran Portal Pelanggan' }}">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-400/20 text-cyan-200 flex items-center justify-center border border-cyan-300/30 group-hover:scale-105 transition-transform">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-cyan-100 flex items-center gap-1.5">
+                                <span>Portal Pelanggan</span>
+                                @if($selectedMetode === 'portal')
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-cyan-400 text-slate-900 font-bold">Aktif</span>
+                                @endif
+                            </span>
+                            <span class="text-[10px] text-cyan-200/70 block">QRIS, Gateway &amp; Bukti Portal</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-lg sm:text-xl font-bold font-mono text-white tracking-tight drop-shadow-xs">
+                            {{ number_format($countPortal, 0, ',', '.') }}
+                        </span>
+                        <span class="text-[10px] text-cyan-200 block font-medium">Pembayaran</span>
+                    </div>
+                </a>
+
+                <!-- 2. Cash / Kolektor -->
+                <a href="{{ route('finance.notifikasi', ['tab' => $tab, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => ($selectedMetode === 'cash' ? '' : 'cash'), 'search' => $search, 'per_page' => $perPage]) }}"
+                   class="group flex items-center justify-between p-2.5 rounded-xl transition duration-200 border {{ $selectedMetode === 'cash' ? 'bg-emerald-500/30 border-emerald-300 ring-2 ring-emerald-400/40 shadow-sm' : 'bg-black/15 hover:bg-black/25 border-white/15' }}"
+                   title="{{ $selectedMetode === 'cash' ? 'Klik untuk membatalkan filter' : 'Filter hanya pembayaran Cash / Kolektor' }}">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-400/20 text-emerald-200 flex items-center justify-center border border-emerald-300/30 group-hover:scale-105 transition-transform">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-emerald-100 flex items-center gap-1.5">
+                                <span>Cash / Kolektor</span>
+                                @if($selectedMetode === 'cash')
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-400 text-slate-900 font-bold">Aktif</span>
+                                @endif
+                            </span>
+                            <span class="text-[10px] text-emerald-200/70 block">Loket Kasir &amp; Kolektor</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-lg sm:text-xl font-bold font-mono text-white tracking-tight drop-shadow-xs">
+                            {{ number_format($countCash, 0, ',', '.') }}
+                        </span>
+                        <span class="text-[10px] text-emerald-200 block font-medium">Pembayaran</span>
+                    </div>
+                </a>
+
+                <!-- 3. Transfer Manual Finance -->
+                <a href="{{ route('finance.notifikasi', ['tab' => $tab, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => ($selectedMetode === 'manual_finance' ? '' : 'manual_finance'), 'search' => $search, 'per_page' => $perPage]) }}"
+                   class="group flex items-center justify-between p-2.5 rounded-xl transition duration-200 border {{ $selectedMetode === 'manual_finance' ? 'bg-amber-500/30 border-amber-300 ring-2 ring-amber-400/40 shadow-sm' : 'bg-black/15 hover:bg-black/25 border-white/15' }}"
+                   title="{{ $selectedMetode === 'manual_finance' ? 'Klik untuk membatalkan filter' : 'Filter hanya pembayaran Transfer Manual Finance' }}">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-200 flex items-center justify-center border border-amber-300/30 group-hover:scale-105 transition-transform">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5m-15 10.5V10.5M3 21h18M12 6.75h.008v.008H12V6.75Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-amber-100 flex items-center gap-1.5">
+                                <span>Transfer Manual</span>
+                                @if($selectedMetode === 'manual_finance')
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-900 font-bold">Aktif</span>
+                                @endif
+                            </span>
+                            <span class="text-[10px] text-amber-200/70 block">Transfer Rekening &amp; Admin</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-lg sm:text-xl font-bold font-mono text-white tracking-tight drop-shadow-xs">
+                            {{ number_format($countManual, 0, ',', '.') }}
+                        </span>
+                        <span class="text-[10px] text-amber-200 block font-medium">Pembayaran</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        </div>
     </div>
 
     <!-- Compact KPI Summary Cards -->
@@ -342,59 +450,127 @@
                 </div>
             </div>
             <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 text-[10px] text-emerald-700 dark:text-emerald-300 font-medium">
-                <span>Periode: <strong>{{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('F Y') }}</strong></span>
+                <span>Periode: <strong>{{ $selectedBulan ? ($bulanList[$selectedBulan] ?? $selectedBulan) : 'Semua Bulan' }} {{ $selectedTahun ?: date('Y') }}</strong></span>
             </div>
         </div>
     </div>
 
     <!-- Filter & Tab Navigation -->
-    <div class="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
-        <form method="GET" action="{{ route('finance.notifikasi') }}" class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-            <!-- Tab Buttons -->
-            <div class="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg max-w-full overflow-x-auto">
-                <a href="{{ route('finance.notifikasi', ['tab' => 'all', 'search' => $search, 'per_page' => $perPage]) }}"
-                   class="px-3 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap {{ $tab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
-                    Semua Notifikasi
-                </a>
-                <a href="{{ route('finance.notifikasi', ['tab' => 'pending', 'search' => $search, 'per_page' => $perPage]) }}"
-                   class="px-3 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'pending' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
-                    <span>Menunggu Approval</span>
-                    @if($kpiPendingCount > 0)
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {{ $tab === 'pending' ? 'bg-white text-amber-600' : 'bg-amber-500 text-white' }}">{{ $kpiPendingCount }}</span>
-                    @endif
-                </a>
-                <a href="{{ route('finance.notifikasi', ['tab' => 'approved', 'search' => $search, 'per_page' => $perPage]) }}"
-                   class="px-3 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap {{ $tab === 'approved' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
-                    Sudah Disetujui (Lunas)
-                </a>
+    <div class="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2.5">
+        <form method="GET" action="{{ route('finance.notifikasi') }}" class="flex flex-col gap-2.5">
+            <!-- Row 1: Tab Navigation & Quick Search -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+                <!-- Tab Buttons -->
+                <div class="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg max-w-full overflow-x-auto">
+                    <a href="{{ route('finance.notifikasi', ['tab' => 'all', 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
+                       class="px-3 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap {{ $tab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                        Semua Notifikasi
+                    </a>
+                    <a href="{{ route('finance.notifikasi', ['tab' => 'pending', 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
+                       class="px-3 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'pending' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                        <span>Menunggu Approval</span>
+                        @if($kpiPendingCount > 0)
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {{ $tab === 'pending' ? 'bg-white text-amber-600' : 'bg-amber-500 text-white' }}">{{ $kpiPendingCount }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('finance.notifikasi', ['tab' => 'approved', 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
+                       class="px-3 py-1.5 rounded-md text-xs font-semibold transition whitespace-nowrap {{ $tab === 'approved' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                        Sudah Disetujui (Lunas)
+                    </a>
+                </div>
+
+                <input type="hidden" name="tab" value="{{ $tab }}">
+
+                <!-- Search Bar & Controls -->
+                <div class="flex items-center gap-2 flex-1 md:max-w-md justify-end">
+                    <div class="relative w-full">
+                        <input type="text"
+                               name="search"
+                               value="{{ $search }}"
+                               placeholder="Cari invoice, internet, pelanggan..."
+                               class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0891b2] text-slate-900 dark:text-white">
+                        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                    </div>
+
+                    <button type="submit"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[#0891b2] to-[#0284c7] hover:from-[#0e7490] hover:to-[#0369a1] shadow-2xs transition flex-shrink-0 cursor-pointer">
+                        Cari
+                    </button>
+                </div>
             </div>
 
-            <input type="hidden" name="tab" value="{{ $tab }}">
+            <!-- Row 2: Filter Toolbar (Bulan, Tahun, Bayar Lewat Mana, Reset Filter, Per Page) -->
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2.5">
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 flex-1">
+                    <!-- 1. Filter Bulan -->
+                    <div class="flex items-center gap-1.5">
+                        <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Bulan:</label>
+                        <select name="bulan"
+                                onchange="this.form.submit()"
+                                class="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0891b2] transition cursor-pointer">
+                            <option value="">Semua Bulan</option>
+                            @foreach($bulanList as $k => $name)
+                                <option value="{{ $k }}" {{ $selectedBulan === (string)$k ? 'selected' : '' }}>
+                                    {{ $k }} - {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-            <!-- Search Bar & Controls -->
-            <div class="flex items-center gap-2 flex-1 md:max-w-md justify-end">
-                <div class="relative w-full">
-                    <input type="text"
-                           name="search"
-                           value="{{ $search }}"
-                           placeholder="Cari invoice, internet, pelanggan..."
-                           class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0891b2] text-slate-900 dark:text-white">
-                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                    </svg>
+                    <!-- 2. Filter Tahun -->
+                    <div class="flex items-center gap-1.5">
+                        <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Tahun:</label>
+                        <select name="tahun"
+                                onchange="this.form.submit()"
+                                class="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0891b2] transition cursor-pointer">
+                            <option value="">Semua Tahun</option>
+                            @foreach($tahunList as $th)
+                                <option value="{{ $th }}" {{ $selectedTahun === (string)$th ? 'selected' : '' }}>
+                                    {{ $th }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- 3. Filter Bayar Lewat Mana -->
+                    <div class="flex items-center gap-1.5">
+                        <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Bayar Lewat:</label>
+                        <select name="metode"
+                                onchange="this.form.submit()"
+                                class="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0891b2] transition cursor-pointer font-medium">
+                            <option value="">Semua Saluran</option>
+                            <option value="portal" {{ $selectedMetode === 'portal' ? 'selected' : '' }}>🌐 Portal Pelanggan</option>
+                            <option value="cash" {{ $selectedMetode === 'cash' ? 'selected' : '' }}>💵 Cash / Kolektor</option>
+                            <option value="manual_finance" {{ $selectedMetode === 'manual_finance' ? 'selected' : '' }}>🏛️ Transfer Manual Finance</option>
+                        </select>
+                    </div>
+
+                    @if($selectedBulan !== '' || $selectedMetode !== '' || ($selectedTahun !== '' && $selectedTahun != date('Y')) || $search !== '')
+                        <a href="{{ route('finance.notifikasi', ['tab' => $tab]) }}"
+                           class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900 transition">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                            <span>Reset Filter</span>
+                        </a>
+                    @endif
                 </div>
-                <select name="per_page"
-                        onchange="this.form.submit()"
-                        class="text-xs py-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer">
-                    <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 / hal</option>
-                    <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 / hal</option>
-                    <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 / hal</option>
-                    <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 / hal</option>
-                </select>
-                <button type="submit"
-                        class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[#0891b2] to-[#0284c7] hover:from-[#0e7490] hover:to-[#0369a1] shadow-2xs transition flex-shrink-0 cursor-pointer">
-                    Cari
-                </button>
+
+                <!-- Per Page Selector -->
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[11px] text-slate-400">Tampilkan:</span>
+                    <select name="per_page"
+                            onchange="this.form.submit()"
+                            class="text-xs py-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer">
+                        <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 / hal</option>
+                        <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 / hal</option>
+                        <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 / hal</option>
+                        <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 / hal</option>
+                        <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100 / hal</option>
+                    </select>
+                </div>
             </div>
         </form>
     </div>

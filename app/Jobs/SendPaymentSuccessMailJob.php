@@ -161,15 +161,21 @@ class SendPaymentSuccessMailJob implements ShouldQueue
 
             if ($hostingerService->isConfigured()) {
                 $hostingerService->send($recipientEmail, $subject, $htmlContent);
-                Log::info("SendPaymentSuccessMailJob: Berhasil mengirim bukti pembayaran via Hostinger Mail API ke {$recipientEmail} untuk invoice {$this->kodeBilling}.");
+                try {
+                    Log::info("SendPaymentSuccessMailJob: Berhasil mengirim bukti pembayaran via Hostinger Mail API ke {$recipientEmail} untuk invoice {$this->kodeBilling}.");
+                } catch (\Throwable $ignored) {}
             } else {
                 Mail::to($recipientEmail)->send(new PaymentSuccessMail($billing, $customer, $this->paymentData));
-                Log::info("SendPaymentSuccessMailJob: Berhasil mengirim bukti pembayaran via SMTP ke {$recipientEmail} untuk invoice {$this->kodeBilling}.");
+                try {
+                    Log::info("SendPaymentSuccessMailJob: Berhasil mengirim bukti pembayaran via SMTP ke {$recipientEmail} untuk invoice {$this->kodeBilling}.");
+                } catch (\Throwable $ignored) {}
             }
         } catch (\Throwable $e) {
-            Log::error("SendPaymentSuccessMailJob Gagal untuk invoice {$this->kodeBilling} ({$recipientEmail}): " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
+            try {
+                Log::error("SendPaymentSuccessMailJob Gagal untuk invoice {$this->kodeBilling} ({$recipientEmail}): " . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+            } catch (\Throwable $ignored) {}
             // Re-throw agar Laravel Queue me-retry job sesuai konfigurasi backoff
             throw $e;
         }

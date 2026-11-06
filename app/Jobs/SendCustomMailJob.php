@@ -90,26 +90,36 @@ class SendCustomMailJob implements ShouldQueue
             if ($hostingerService->isConfigured()) {
                 try {
                     $hostingerService->send($this->recipientEmail, $this->emailSubject, $fullHtml);
-                    Log::info("SendCustomMailJob: Berhasil mengirim custom email via Hostinger API ke {$this->recipientEmail} ({$this->recipientName}).");
+                    try {
+                        Log::info("SendCustomMailJob: Berhasil mengirim custom email via Hostinger API ke {$this->recipientEmail} ({$this->recipientName}).");
+                    } catch (\Throwable $ignored) {}
                 } catch (\Throwable $apiEx) {
                     // Jika Hostinger API gagal (misal rate limit / gangguan API) dan SMTP dikonfigurasi, coba fallback via SMTP
                     if (!empty(config('mail.mailers.smtp.host')) && !empty(config('mail.mailers.smtp.username'))) {
-                        Log::warning("SendCustomMailJob: Hostinger API gagal ({$apiEx->getMessage()}), mencoba fallback SMTP ke {$this->recipientEmail}...");
+                        try {
+                            Log::warning("SendCustomMailJob: Hostinger API gagal ({$apiEx->getMessage()}), mencoba fallback SMTP ke {$this->recipientEmail}...");
+                        } catch (\Throwable $ignored) {}
                         $this->sendViaSmtpWithRetry();
-                        Log::info("SendCustomMailJob: Berhasil mengirim email via fallback SMTP ke {$this->recipientEmail}.");
+                        try {
+                            Log::info("SendCustomMailJob: Berhasil mengirim email via fallback SMTP ke {$this->recipientEmail}.");
+                        } catch (\Throwable $ignored) {}
                     } else {
                         throw $apiEx;
                     }
                 }
             } else {
                 $this->sendViaSmtpWithRetry();
-                Log::info("SendCustomMailJob: Berhasil mengirim custom email via SMTP ke {$this->recipientEmail}.");
+                try {
+                    Log::info("SendCustomMailJob: Berhasil mengirim custom email via SMTP ke {$this->recipientEmail}.");
+                } catch (\Throwable $ignored) {}
             }
 
             $this->updateLogStatus('sent', null);
         } catch (\Throwable $e) {
             $friendlyErr = $this->formatHumanError($e->getMessage());
-            Log::error("SendCustomMailJob Gagal ke {$this->recipientEmail}: {$friendlyErr}");
+            try {
+                Log::error("SendCustomMailJob Gagal ke {$this->recipientEmail}: {$friendlyErr}");
+            } catch (\Throwable $ignored) {}
             $this->updateLogStatus('failed', $friendlyErr);
 
             // Jika berjalan di background queue (bukan sync), lempar ulang agar mekanisme retry/backoff berjalan

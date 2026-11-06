@@ -175,7 +175,9 @@ class HostingerMailService
 
             // Status 200, 201, 202, atau 204 No Content menandakan pesan berhasil terkirim
             if ($response->successful() || in_array($status, [200, 201, 202, 204])) {
-                Log::info("Hostinger Mail API: Email berhasil dikirim ke {$cleanTo} via mailbox {$mailboxResourceId} (HTTP {$status})");
+                try {
+                    Log::info("Hostinger Mail API: Email berhasil dikirim ke {$cleanTo} via mailbox {$mailboxResourceId} (HTTP {$status})");
+                } catch (\Throwable $ignored) {}
                 return true;
             }
 
@@ -196,10 +198,14 @@ class HostingerMailService
                 $errMsg = "Hostinger Mail API Error (HTTP {$status}): {$apiDetail}";
             }
 
-            Log::error($errMsg);
+            try {
+                Log::error($errMsg);
+            } catch (\Throwable $ignored) {}
             throw new Exception($errMsg);
         } catch (\Throwable $e) {
-            Log::error("Hostinger Mail API Exception ke {$cleanTo}: " . $e->getMessage());
+            try {
+                Log::error("Hostinger Mail API Exception ke {$cleanTo}: " . $e->getMessage());
+            } catch (\Throwable $ignored) {}
             throw $e;
         }
     }

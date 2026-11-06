@@ -992,6 +992,17 @@
                                         📱 {{ $item->nomor_hp }}
                                     </div>
                                 @endif
+                                <div class="text-[9.5px] font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-emerald-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v9.75c0 .414.336.75.75.75h.75m0-11.25H12m6.75 0H21m0 0v9.75a.75.75 0 0 1-.75.75h-.75m0-10.5v-.75A.75.75 0 0 0 19.5 4.5H18" />
+                                    </svg>
+                                    @if(!empty($item->harga_bandwith) && (float)$item->harga_bandwith > 0)
+                                        <span>Rp {{ number_format((float)$item->harga_bandwith, 0, ',', '.') }}</span>
+                                        <span class="text-[8.5px] font-sans font-normal text-slate-400 dark:text-slate-500">/bln</span>
+                                    @else
+                                        <span class="text-slate-400 dark:text-slate-500 font-normal font-sans text-[8.5px]">-</span>
+                                    @endif
+                                </div>
                             </td>
 
                             <!-- 2. Group Layanan -->
@@ -1390,6 +1401,12 @@
                                 </a>
                             @else
                                 <div class="text-[11px] text-slate-400">-</div>
+                            @endif
+                            @if(!empty($item->harga_bandwith) && (float)$item->harga_bandwith > 0)
+                                <div class="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <span>Rp {{ number_format((float)$item->harga_bandwith, 0, ',', '.') }}</span>
+                                    <span class="text-[9px] font-sans font-normal text-slate-400">/bln</span>
+                                </div>
                             @endif
                             <div class="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase truncate">
                                 Sales: {{ $item->nama_sales ?: '-' }}

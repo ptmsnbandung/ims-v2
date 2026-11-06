@@ -915,13 +915,13 @@
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
-                        <th class="py-2.5 px-3">Pelanggan</th>
-                        <th class="py-2.5 px-3">Group Layanan</th>
-                        <th class="py-2.5 px-3">Lokasi Pemasangan</th>
-                        <th class="py-2.5 px-3 min-w-[160px]">Status</th>
-                        <th class="py-2.5 px-3 min-w-[150px]">Tanggal SO / Registrasi</th>
-                        <th class="py-2.5 px-3 text-center min-w-[200px]">Aksi</th>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
+                        <th class="py-3 px-3">Pelanggan</th>
+                        <th class="py-3 px-3">Group Layanan</th>
+                        <th class="py-3 px-3">Lokasi Pemasangan</th>
+                        <th class="py-3 px-3 min-w-[130px]">Status</th>
+                        <th class="py-3 px-3 min-w-[145px]">Tanggal SO / Registrasi</th>
+                        <th class="py-3 px-3 text-center min-w-[185px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -929,11 +929,11 @@
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150">
                             
                             <!-- 1. Pelanggan -->
-                            <td class="py-2.5 px-3 align-top">
+                            <td class="py-3 px-3 align-top">
                                 @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
-                                <div class="flex items-center gap-1 flex-wrap">
+                                <div class="flex items-center gap-1.5 flex-wrap">
                                     <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
-                                       class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline tracking-wide text-xs"
+                                       class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline tracking-wide text-[13px]"
                                        title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
                                         {{ $item->nomor_internet }}
                                     </a>
@@ -955,75 +955,76 @@
                                         <svg x-show="copied" x-cloak class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
-                                        <span x-show="copied" x-cloak class="text-[9px] font-medium text-emerald-700 dark:text-emerald-400 leading-none">
+                                        <span x-show="copied" x-cloak class="text-[9.5px] font-medium text-emerald-700 dark:text-emerald-400 leading-none">
                                             disalin
                                         </span>
                                     </button>
                                 </div>
-                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-[13px] leading-snug">
                                     <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
                                        class="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
                                        title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
                                         <span>{{ $item->nama_pelanggan }}</span>
                                     </a>
-                                    <span class="text-slate-500 dark:text-slate-400 font-normal no-underline">
+                                    <span class="text-slate-500 dark:text-slate-400 font-normal no-underline text-[11px]">
                                         ( {{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
                                 @else
-                                <div class="font-bold font-mono text-slate-400 text-xs tracking-wide">
+                                <div class="font-bold font-mono text-slate-400 text-[13px] tracking-wide">
                                     -
                                 </div>
-                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-[13px] leading-snug">
                                     <span>{{ $item->nama_pelanggan }}</span>
-                                    <span class="text-slate-500 dark:text-slate-400 font-normal">
+                                    <span class="text-slate-500 dark:text-slate-400 font-normal text-[11px]">
                                         ( {{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
                                 @endif
-                                <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
+                                <div class="text-[11px] text-slate-700 dark:text-slate-300 font-medium mt-0.5">
                                     {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }} 
                                     @if($item->nominal_bandwith)
-                                        <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $item->nominal_bandwith }} Mbps</span>
+                                        <span class="text-slate-900 dark:text-slate-100 font-bold">{{ $item->nominal_bandwith }} Mbps</span>
                                     @endif
                                 </div>
                                 @if($item->nomor_hp)
-                                    <div class="text-[9px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-                                        📱 {{ $item->nomor_hp }}
+                                    <div class="text-[10.5px] text-slate-600 dark:text-slate-400 font-mono mt-0.5 flex items-center gap-1">
+                                        <span>📱</span>
+                                        <span>{{ $item->nomor_hp }}</span>
                                     </div>
                                 @endif
-                                <div class="text-[9.5px] font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
-                                    <svg class="w-3 h-3 text-emerald-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <div class="text-[11.5px] font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v9.75c0 .414.336.75.75.75h.75m0-11.25H12m6.75 0H21m0 0v9.75a.75.75 0 0 1-.75.75h-.75m0-10.5v-.75A.75.75 0 0 0 19.5 4.5H18" />
                                     </svg>
                                     @if(!empty($item->harga_bandwith) && (float)$item->harga_bandwith > 0)
                                         <span>Rp {{ number_format((float)$item->harga_bandwith, 0, ',', '.') }}</span>
-                                        <span class="text-[8.5px] font-sans font-normal text-slate-400 dark:text-slate-500">/bln</span>
+                                        <span class="text-[9.5px] font-sans font-normal text-slate-400 dark:text-slate-500">/bln</span>
                                     @else
-                                        <span class="text-slate-400 dark:text-slate-500 font-normal font-sans text-[8.5px]">-</span>
+                                        <span class="text-slate-400 dark:text-slate-500 font-normal font-sans text-[9.5px]">-</span>
                                     @endif
                                 </div>
                             </td>
 
                             <!-- 2. Group Layanan -->
-                            <td class="py-2.5 px-3 align-top font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[10px]">
+                            <td class="py-3 px-3 align-top font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px]">
                                 {{ $item->group_layanan ?: 'MEDIANET' }}
                             </td>
 
                             <!-- 3. Lokasi Pemasangan -->
-                            <td class="py-2.5 px-3 align-top max-w-xs">
-                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[10px] tracking-wide block mb-0.5">
+                            <td class="py-3 px-3 align-top max-w-sm">
+                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[11px] tracking-wide block mb-0.5">
                                     {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
                                 </span>
-                                <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed uppercase">
+                                <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-normal uppercase">
                                     {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
                                 </p>
                             </td>
 
                             <!-- 4. Status -->
-                            <td class="py-2.5 px-3 align-top space-y-1.5">
+                            <td class="py-3 px-3 align-top space-y-1.5">
                                 <div>
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold border
                                         @if($item->status_reg == '20')
                                              bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20
                                         @elseif(in_array($item->status_reg, ['21', '21.1']))
@@ -1048,27 +1049,27 @@
                                 </div>
 
                                 @if($item->date_update)
-                                    <div class="text-[9px] text-slate-500 dark:text-slate-400">
-                                        Updated: <span class="text-slate-700 dark:text-slate-300">{{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M Y H:i') }} WIB</span>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                                        Updated: <span class="text-slate-700 dark:text-slate-300 font-medium">{{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M Y H:i') }} WIB</span>
                                     </div>
                                 @endif
                             </td>
 
                             <!-- 5. Tanggal SO / Registrasi -->
-                            <td class="py-2.5 px-3 align-top text-xs space-y-0.5">
-                                <div class="text-slate-900 dark:text-white font-semibold text-[10px]">
+                            <td class="py-3 px-3 align-top space-y-0.5">
+                                <div class="text-slate-900 dark:text-white font-semibold text-[11px]">
                                     {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }} WIB
                                 </div>
-                                <div class="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-medium">
+                                <div class="text-[10.5px] text-slate-600 dark:text-slate-400 uppercase font-medium">
                                     {{ $item->user_create ?: 'SYSTEM' }}
                                 </div>
-                                <div class="text-[9px] text-blue-600 dark:text-blue-400 font-mono font-semibold">
+                                <div class="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-semibold">
                                     SALES: {{ $item->nama_sales ?: '-' }}
                                 </div>
                             </td>
 
                             <!-- 6. Aksi -->
-                            <td class="py-2.5 px-3 align-top text-center text-xs">
+                            <td class="py-3 px-3 align-top text-center">
                                 <div class="flex items-center justify-center gap-1 flex-wrap">
                                     @if($isCeo)
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold font-mono">
@@ -1160,7 +1161,7 @@
                                             <!-- 1. Req UP / Downgrade Bandwidth -->
                                             <button type="button" 
                                                     @click="openUpDowngrade({{ $custJson }})" 
-                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[10.5px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
                                                     title="Ajukan Req UP / Downgrade Bandwidth ke NOC">
                                                 <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
@@ -1171,7 +1172,7 @@
                                             <!-- 2. Req Suspend -->
                                             <button type="button" 
                                                     @click="openSuspend({{ $custJson }})" 
-                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-[10.5px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
                                                     title="Ajukan Req Suspend ke NOC">
                                                 <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
@@ -1182,7 +1183,7 @@
                                             <!-- 3. Adjust Potongan & PPN -->
                                             <button type="button" 
                                                     @click="openAdjust({{ $custJson }})" 
-                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-purple-50 hover:bg-purple-100 dark:bg-purple-500/10 dark:hover:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-purple-50 hover:bg-purple-100 dark:bg-purple-500/10 dark:hover:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 text-[10.5px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
                                                     title="Atur Potongan / Diskon & PPN Tagihan Pelanggan">
                                                 <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
@@ -1193,7 +1194,7 @@
                                             <!-- 4. Req Terminasi -->
                                             <button type="button" 
                                                     @click="openTerminasi({{ $custJson }})" 
-                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[10.5px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
                                                     title="Ajukan Req Terminasi (Cabut) ke NOC">
                                                 <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />

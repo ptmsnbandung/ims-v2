@@ -933,7 +933,7 @@
                                 @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
-                                       class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline tracking-wide text-[13px]"
+                                       class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline tracking-wide text-[12px]"
                                        title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
                                         {{ $item->nomor_internet }}
                                     </a>
@@ -960,7 +960,7 @@
                                         </span>
                                     </button>
                                 </div>
-                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-[13px] leading-snug">
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-[12px] leading-snug">
                                     <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
                                        class="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
                                        title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
@@ -971,10 +971,10 @@
                                     </span>
                                 </div>
                                 @else
-                                <div class="font-bold font-mono text-slate-400 text-[13px] tracking-wide">
+                                <div class="font-bold font-mono text-slate-400 text-[12px] tracking-wide">
                                     -
                                 </div>
-                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-[13px] leading-snug">
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-[12px] leading-snug">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 dark:text-slate-400 font-normal text-[11px]">
                                         ( {{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )

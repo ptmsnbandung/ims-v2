@@ -9,7 +9,7 @@ mkdir -p /var/www/ims2/storage/framework/cache/data \
          /var/www/ims2/bootstrap/cache
 
 chown -R www-data:www-data /var/www/ims2/storage /var/www/ims2/bootstrap/cache
-chmod -R 775 /var/www/ims2/storage /var/www/ims2/bootstrap/cache
+chmod -R 777 /var/www/ims2/storage /var/www/ims2/bootstrap/cache
 
 # Ensure upload directory exists and is writable
 mkdir -p /var/www/ims2/public/uploads/registrasi

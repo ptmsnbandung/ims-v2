@@ -935,8 +935,26 @@ class TeknikController extends Controller
 
         // Filter: Wilayah
         if ($request->filled('wilayah')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('view_batchjob.nama_kota_pasang', 'like', '%' . $request->wilayah . '%');
+            $wilayah = trim($request->wilayah);
+            $query->where(function ($q) use ($wilayah) {
+                if (stripos($wilayah, 'BARAT') !== false) {
+                    $q->where('view_batchjob.nama_kota_pasang', 'like', '%BANDUNG BARAT%');
+                } elseif (stripos($wilayah, 'KOTA') !== false) {
+                    $q->where('view_batchjob.nama_kota_pasang', 'like', '%KOTA BANDUNG%');
+                } elseif (stripos($wilayah, 'KAB') !== false && stripos($wilayah, 'BANDUNG') !== false) {
+                    $q->where(function ($sub) {
+                        $sub->where(function ($w) {
+                            $w->where('view_batchjob.nama_kota_pasang', 'like', '%KAB%BANDUNG%')
+                              ->orWhere('view_batchjob.nama_kota_pasang', 'KABUPATEN BANDUNG')
+                              ->orWhere('view_batchjob.nama_kota_pasang', 'KAB. BANDUNG');
+                        })
+                        ->where('view_batchjob.nama_kota_pasang', 'not like', '%BARAT%')
+                        ->where('view_batchjob.nama_kota_pasang', 'not like', '%KOTA%');
+                    });
+                } else {
+                    $q->where('view_batchjob.nama_kota_pasang', $wilayah)
+                      ->orWhere('view_batchjob.nama_kota_pasang', 'like', '%' . $wilayah . '%');
+                }
             });
         }
 
@@ -965,18 +983,12 @@ class TeknikController extends Controller
             ? DB::table('m_status_registrasi')->whereIn('status_reg', $registrationStatuses)->get()
             : collect();
 
-        // Master data wilayah unik diambil dari kolom nama_kota_pasang di tabel view_batchjob
-        $wilayahList = DB::table('view_batchjob')
-            ->whereNotNull('nama_kota_pasang')
-            ->where('nama_kota_pasang', '!=', '')
-            ->where('nama_kota_pasang', '!=', '-')
-            ->distinct()
-            ->orderBy('nama_kota_pasang')
-            ->pluck('nama_kota_pasang');
-
-        if ($wilayahList->isEmpty() && Schema::hasTable('m_wilayah_perangkat')) {
-            $wilayahList = DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->values();
-        }
+        // Master data wilayah filter (KABUPATEN BANDUNG, KOTA BANDUNG, KAB. BANDUNG BARAT)
+        $wilayahList = collect([
+            'KABUPATEN BANDUNG',
+            'KOTA BANDUNG',
+            'KAB. BANDUNG BARAT',
+        ]);
 
         // Karyawan Tim Teknisi / Team Instalasi (divisi Teknik & role karyawan dari gomsn.users_unified)
         $karyawanTeknisi = $this->getTeamTeknik();
@@ -1916,9 +1928,24 @@ class TeknikController extends Controller
         if ($request->filled('wilayah')) {
             $wilayah = trim($request->wilayah);
             $query->where(function ($q) use ($wilayah) {
-                $q->where('nama_kota_pasang', $wilayah)
-                  ->orWhere('nama_kota_pasang', 'like', '%' . $wilayah . '%')
-                  ->orWhere('kode_wilayah_kota_pasang', 'like', '%' . $wilayah . '%');
+                if (stripos($wilayah, 'BARAT') !== false) {
+                    $q->where('nama_kota_pasang', 'like', '%BANDUNG BARAT%');
+                } elseif (stripos($wilayah, 'KOTA') !== false) {
+                    $q->where('nama_kota_pasang', 'like', '%KOTA BANDUNG%');
+                } elseif (stripos($wilayah, 'KAB') !== false && stripos($wilayah, 'BANDUNG') !== false) {
+                    $q->where(function ($sub) {
+                        $sub->where(function ($w) {
+                            $w->where('nama_kota_pasang', 'like', '%KAB%BANDUNG%')
+                              ->orWhere('nama_kota_pasang', 'KABUPATEN BANDUNG')
+                              ->orWhere('nama_kota_pasang', 'KAB. BANDUNG');
+                        })
+                        ->where('nama_kota_pasang', 'not like', '%BARAT%')
+                        ->where('nama_kota_pasang', 'not like', '%KOTA%');
+                    });
+                } else {
+                    $q->where('nama_kota_pasang', $wilayah)
+                      ->orWhere('nama_kota_pasang', 'like', '%' . $wilayah . '%');
+                }
             });
         }
 
@@ -2559,9 +2586,24 @@ class TeknikController extends Controller
         if ($request->filled('wilayah')) {
             $wilayah = trim($request->wilayah);
             $query->where(function ($q) use ($wilayah) {
-                $q->where('nama_kota_pasang', $wilayah)
-                  ->orWhere('nama_kota_pasang', 'like', '%' . $wilayah . '%')
-                  ->orWhere('kode_wilayah_kota_pasang', 'like', '%' . $wilayah . '%');
+                if (stripos($wilayah, 'BARAT') !== false) {
+                    $q->where('nama_kota_pasang', 'like', '%BANDUNG BARAT%');
+                } elseif (stripos($wilayah, 'KOTA') !== false) {
+                    $q->where('nama_kota_pasang', 'like', '%KOTA BANDUNG%');
+                } elseif (stripos($wilayah, 'KAB') !== false && stripos($wilayah, 'BANDUNG') !== false) {
+                    $q->where(function ($sub) {
+                        $sub->where(function ($w) {
+                            $w->where('nama_kota_pasang', 'like', '%KAB%BANDUNG%')
+                              ->orWhere('nama_kota_pasang', 'KABUPATEN BANDUNG')
+                              ->orWhere('nama_kota_pasang', 'KAB. BANDUNG');
+                        })
+                        ->where('nama_kota_pasang', 'not like', '%BARAT%')
+                        ->where('nama_kota_pasang', 'not like', '%KOTA%');
+                    });
+                } else {
+                    $q->where('nama_kota_pasang', $wilayah)
+                      ->orWhere('nama_kota_pasang', 'like', '%' . $wilayah . '%');
+                }
             });
         }
 
@@ -2599,18 +2641,12 @@ class TeknikController extends Controller
             ? DB::table('m_status_registrasi')->whereIn('status_reg', $confirmedStatuses)->get()
             : collect();
 
-        // Master data wilayah unik diambil dari kolom nama_kota_pasang di tabel view_batchjob
-        $wilayahList = DB::table('view_batchjob')
-            ->whereNotNull('nama_kota_pasang')
-            ->where('nama_kota_pasang', '!=', '')
-            ->where('nama_kota_pasang', '!=', '-')
-            ->distinct()
-            ->orderBy('nama_kota_pasang')
-            ->pluck('nama_kota_pasang');
-
-        if ($wilayahList->isEmpty() && Schema::hasTable('m_wilayah_perangkat')) {
-            $wilayahList = DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->values();
-        }
+        // Master data wilayah filter (KABUPATEN BANDUNG, KOTA BANDUNG, KAB. BANDUNG BARAT)
+        $wilayahList = collect([
+            'KABUPATEN BANDUNG',
+            'KOTA BANDUNG',
+            'KAB. BANDUNG BARAT',
+        ]);
 
         // Detailed Bandwidth Breakdown Counts
         $rawBandwidthCounts = DB::table('view_batchjob')
@@ -2766,9 +2802,24 @@ class TeknikController extends Controller
         if ($request->filled('wilayah')) {
             $wilayah = trim($request->wilayah);
             $query->where(function ($q) use ($wilayah) {
-                $q->where('nama_kota_pasang', $wilayah)
-                  ->orWhere('nama_kota_pasang', 'like', '%' . $wilayah . '%')
-                  ->orWhere('kode_wilayah_kota_pasang', 'like', '%' . $wilayah . '%');
+                if (stripos($wilayah, 'BARAT') !== false) {
+                    $q->where('nama_kota_pasang', 'like', '%BANDUNG BARAT%');
+                } elseif (stripos($wilayah, 'KOTA') !== false) {
+                    $q->where('nama_kota_pasang', 'like', '%KOTA BANDUNG%');
+                } elseif (stripos($wilayah, 'KAB') !== false && stripos($wilayah, 'BANDUNG') !== false) {
+                    $q->where(function ($sub) {
+                        $sub->where(function ($w) {
+                            $w->where('nama_kota_pasang', 'like', '%KAB%BANDUNG%')
+                              ->orWhere('nama_kota_pasang', 'KABUPATEN BANDUNG')
+                              ->orWhere('nama_kota_pasang', 'KAB. BANDUNG');
+                        })
+                        ->where('nama_kota_pasang', 'not like', '%BARAT%')
+                        ->where('nama_kota_pasang', 'not like', '%KOTA%');
+                    });
+                } else {
+                    $q->where('nama_kota_pasang', $wilayah)
+                      ->orWhere('nama_kota_pasang', 'like', '%' . $wilayah . '%');
+                }
             });
         }
 

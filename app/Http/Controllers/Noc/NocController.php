@@ -1723,8 +1723,8 @@ class NocController extends Controller
         if (!empty($ontUs)) {
             $customerName = $currentCust->nama_pelanggan ?? $nomorInternet;
             $secretComment = $request->filled('pppoe_comment') 
-                ? $request->pppoe_comment 
-                : "Aktivasi - {$customerName} ({$nomorInternet})";
+                ? (string)$request->pppoe_comment 
+                : '';
 
             $mikrotikResult = $mikrotikService->createOrUpdateSecret([
                 'name' => $ontUs,
@@ -1873,7 +1873,7 @@ class NocController extends Controller
             'service' => 'pppoe',
             'local_address' => $request->local_address ?: '',
             'remote_address' => $request->remote_address ?: '',
-            'comment' => $request->pppoe_comment ?: "Aktivasi - {$nomorInternet}",
+            'comment' => $request->filled('pppoe_comment') ? (string)$request->pppoe_comment : '',
             'disabled' => 'no',
         ]);
 

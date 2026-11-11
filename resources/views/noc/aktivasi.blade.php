@@ -274,7 +274,7 @@
              let matchedProf = bw ? initialProfiles.find(p => p.name.toLowerCase().includes('-' + bw + 'm') || p.name.toLowerCase().includes(bw)) : null;
              this.pppProfile = matchedProf ? matchedProf.name : (initialProfiles.length > 0 ? initialProfiles[0].name : (bw ? ('Broadband-' + bw + 'M') : 'Broadband-20M'));
              this.remoteAddress = '';
-             this.pppoeComment = 'Aktivasi - ' + (item.nama_pelanggan || '') + ' (' + item.nomor_internet + ')';
+             this.pppoeComment = '';
 
              if (item.aktivasi_team) {
                  this.modalTeamAktivasi = item.aktivasi_team.split(',').map(s => s.trim());

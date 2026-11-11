@@ -172,8 +172,11 @@
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs cursor-pointer">
                         <option value="">SEMUA WILAYAH</option>
                         @foreach($wilayahList as $wilayah)
-                            <option value="{{ $wilayah->name_w }}" {{ ($filters['wilayah'] ?? '') == $wilayah->name_w ? 'selected' : '' }}>
-                                {{ $wilayah->name_w }}
+                            @php
+                                $valWilayah = is_object($wilayah) ? ($wilayah->nama_kota_pasang ?? $wilayah->name_w ?? '') : (string)$wilayah;
+                            @endphp
+                            <option value="{{ $valWilayah }}" {{ ($filters['wilayah'] ?? '') == $valWilayah ? 'selected' : '' }}>
+                                {{ $valWilayah }}
                             </option>
                         @endforeach
                     </select>

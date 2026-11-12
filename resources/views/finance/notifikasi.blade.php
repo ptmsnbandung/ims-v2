@@ -1129,7 +1129,7 @@
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="approveModalOpen = false"
-             class="relative w-full max-w-lg md:max-w-2xl lg:max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto transition-all duration-200">
+             class="relative z-10 w-full max-w-lg md:max-w-2xl lg:max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto transition-all duration-200">
             
             <form action="{{ route('finance.notifikasi.approve') }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -1435,7 +1435,7 @@
                  x-transition:leave="ease-in duration-150"
                  x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                  x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm w-full border border-slate-200 dark:border-slate-800">
+                 class="relative z-10 inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm w-full border border-slate-200 dark:border-slate-800">
                 
                 <form action="{{ route('finance.notifikasi.reject') }}" method="POST">
                     @csrf

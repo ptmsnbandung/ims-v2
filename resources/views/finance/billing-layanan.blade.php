@@ -1486,6 +1486,14 @@
                                         <span>Multi User</span>
                                     </label>
                                 </div>
+                                <div x-show="generateJenis === 'single'" x-transition class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <label class="inline-flex items-center gap-2 text-xs cursor-pointer select-none">
+                                        <input type="checkbox" name="ignore_sequential" x-model="ignoreSequential" value="1" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 accent-amber-600">
+                                        <span class="font-medium text-slate-700 dark:text-slate-300">
+                                            Abaikan Urutan Bulan <span class="text-[11px] text-amber-600 dark:text-amber-400 font-normal">(Khusus Re-Aktivasi / Pasca Suspend)</span>
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
@@ -1765,6 +1773,11 @@
                                                                 <svg class="w-3 h-3 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                                                 <span x-text="c.last_billing"></span>
                                                             </span>
+                                                            <template x-if="ignoreSequential">
+                                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-700">
+                                                                    Bypass
+                                                                </span>
+                                                            </template>
                                                         </div>
                                                     </template>
                                                 </td>
@@ -1781,18 +1794,19 @@
                                                             Generated
                                                         </span>
                                                     </template>
-                                                    <template x-if="!c.is_generated && c.is_sequential_valid">
+                                                    <template x-if="!c.is_generated && (c.is_sequential_valid || ignoreSequential)">
                                                         <button type="submit"
                                                                 name="nomor_internet"
                                                                 :value="c.nomor_internet"
-                                                                class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs transition cursor-pointer">
-                                                            Generate
+                                                                class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+                                                                :class="!c.is_sequential_valid ? 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 shadow-amber-500/20' : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-blue-500/20'">
+                                                            <span x-text="!c.is_sequential_valid ? 'Bypass & Generate' : 'Generate'"></span>
                                                         </button>
                                                     </template>
-                                                    <template x-if="!c.is_generated && !c.is_sequential_valid">
+                                                    <template x-if="!c.is_generated && !c.is_sequential_valid && !ignoreSequential">
                                                         <button type="button"
                                                                 disabled
-                                                                :title="'Tidak dapat generate: Invoice bulan ' + c.expected_prev_billing + ' belum digenerate'"
+                                                                :title="'Tidak dapat generate: Invoice bulan ' + c.expected_prev_billing + ' belum digenerate. Centang \'Abaikan Urutan Bulan\' jika pelanggan baru re-aktif.'"
                                                                 class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-medium cursor-not-allowed border border-slate-200 dark:border-slate-700 select-none">
                                                             <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                                             <span>Terkunci</span>
@@ -3572,6 +3586,7 @@ function billingLayananPage() {
         // Modal Generate Invoice
         generateModalOpen: false,
         generateJenis: 'single',
+        ignoreSequential: false,
         generateLayanan: '',
         generateBulan: '{{ $selectedBulan ?: date('m') }}',
         generateTahun: '{{ $selectedTahun ?: date('Y') }}',
@@ -3586,6 +3601,7 @@ function billingLayananPage() {
         generateLoading: false,
         async openGenerateModal() {
             this.generateModalOpen = true;
+            this.ignoreSequential = false;
             this.generatePage = 1;
             this.generateSearch = '';
             if (this.generateLayanan) {

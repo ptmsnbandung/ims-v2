@@ -26,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        error_reporting(E_ALL & ~E_NOTICE & ~E_USER_NOTICE);
+
         if ($this->app->environment('production') || str_starts_with((string) config('app.url'), 'https://')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }

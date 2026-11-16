@@ -1,5 +1,7 @@
 <?php
 
+error_reporting(E_ALL & ~E_NOTICE & ~E_USER_NOTICE);
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 

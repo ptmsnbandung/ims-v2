@@ -2763,10 +2763,6 @@ class TeknikController extends Controller
             $query->whereIn('status_reg', $confirmedStatuses);
         }
 
-        if ($request->filled('layanan')) {
-            $query->where('kode_kategori_bandwith', $request->layanan);
-        }
-
         if ($request->filled('group_layanan')) {
             $group = $request->group_layanan;
             if (strtoupper($group) === 'MEDIANET') {
@@ -2845,9 +2841,7 @@ class TeknikController extends Controller
             $filterLabel .= ' | Sales: ' . $sales;
         }
 
-        $totalRecords = (clone $query)->count();
         $title = 'DATA PELANGGAN IMS (INTERNET MANAGEMENT SYSTEM)';
-        $subtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Total: ' . number_format($totalRecords, 0, ',', '.') . ' Pelanggan | Filter: ' . $filterLabel;
 
         $headers = [
             'No',
@@ -2875,14 +2869,10 @@ class TeknikController extends Controller
 
         $widths = [6, 18, 32, 14, 20, 18, 28, 26, 16, 18, 16, 16, 40, 12, 20, 20, 20, 20, 22, 20, 20];
 
-        $xlsxFile = ExcelExportService::generateXlsx(
-            $title,
-            $subtitle,
-            $headers,
-            $widths,
-            function (callable $writeRow) use ($query) {
+        $buildSheetCallback = function ($sheetQuery): callable {
+            return function (callable $writeRow) use ($sheetQuery) {
                 $no = 1;
-                $query->orderBy('date_create', 'desc')->orderBy('nomor_internet', 'desc')->chunk(500, function ($rows) use ($writeRow, &$no) {
+                $sheetQuery->orderBy('date_create', 'desc')->orderBy('nomor_internet', 'desc')->chunk(500, function ($rows) use ($writeRow, &$no) {
                     foreach ($rows as $r) {
                         $gender = isset($r->jenis_kelamin)
                             ? ($r->jenis_kelamin == 1 ? 'Laki-Laki' : ($r->jenis_kelamin == 2 ? 'Perempuan' : '-'))
@@ -2926,8 +2916,59 @@ class TeknikController extends Controller
                         ]);
                     }
                 });
+            };
+        };
+
+        $xlsxFile = null;
+        if ($request->filled('custom_sheets')) {
+            $customSheets = json_decode((string)$request->input('custom_sheets'), true);
+            if (is_array($customSheets) && count($customSheets) > 0) {
+                $layananMap = Schema::hasTable('m_bandwith_kategori')
+                    ? DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith', 'kode_kategori_bandwith')->toArray()
+                    : [];
+
+                $sheetsConfig = [];
+                foreach ($customSheets as $idx => $sheetItem) {
+                    if (!is_array($sheetItem)) {
+                        continue;
+                    }
+                    $sheetName = trim((string)($sheetItem['name'] ?? '')) ?: ('Sheet ' . ($idx + 1));
+                    $layananCodes = array_values(array_filter(array_map('strval', (array)($sheetItem['layanan'] ?? []))));
+
+                    $sheetQuery = clone $query;
+                    if (!empty($layananCodes)) {
+                        $sheetQuery->whereIn('kode_kategori_bandwith', $layananCodes);
+                        $layananNames = array_map(fn($k) => $layananMap[$k] ?? $k, $layananCodes);
+                        $layananDesc = implode(', ', $layananNames);
+                    } else {
+                        $layananDesc = 'Semua Layanan';
+                    }
+
+                    $sheetTotal = (clone $sheetQuery)->count();
+                    $sheetSubtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Total: ' . number_format($sheetTotal, 0, ',', '.') . ' Pelanggan | Layanan: ' . $layananDesc . ' | Filter: ' . $filterLabel;
+
+                    $sheetsConfig[] = [
+                        'name' => $sheetName,
+                        'title' => $title . ' - ' . strtoupper($sheetName),
+                        'subtitle' => $sheetSubtitle,
+                        'callback' => $buildSheetCallback($sheetQuery),
+                    ];
+                }
+
+                if (!empty($sheetsConfig)) {
+                    $xlsxFile = ExcelExportService::generateMultiSheetXlsx($sheetsConfig, $headers, $widths);
+                }
             }
-        );
+        }
+
+        if ($xlsxFile === null) {
+            if ($request->filled('layanan')) {
+                $query->where('kode_kategori_bandwith', $request->layanan);
+            }
+            $totalRecords = (clone $query)->count();
+            $subtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Total: ' . number_format($totalRecords, 0, ',', '.') . ' Pelanggan | Filter: ' . $filterLabel;
+            $xlsxFile = ExcelExportService::generateXlsx($title, $subtitle, $headers, $widths, $buildSheetCallback($query));
+        }
 
         $downloadFilename = 'Data_Pelanggan_IMS_' . date('Ymd_His') . '.xlsx';
 

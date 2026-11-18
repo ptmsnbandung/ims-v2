@@ -12,6 +12,11 @@
     $pelangganRoute = request()->routeIs('finance.*') ? 'finance.pelanggan' : 'teknik.pelanggan';
     $profileRoute = request()->routeIs('finance.*') ? 'finance.pelanggan.profile' : 'teknik.pelanggan.profile';
     $exportRoute = request()->routeIs('finance.*') ? 'finance.pelanggan.export' : 'teknik.pelanggan.export';
+    $exportLayananOptions = collect($layananList ?? [])->map(function ($layanan) {
+        $kode = is_object($layanan) ? ($layanan->kode_kategori_bandwith ?? '') : (is_array($layanan) ? ($layanan['kode_kategori_bandwith'] ?? '') : (string)$layanan);
+        $nama = is_object($layanan) ? ($layanan->nama_kategori_bandwith ?? $kode) : (is_array($layanan) ? ($layanan['nama_kategori_bandwith'] ?? $kode) : (string)$layanan);
+        return ['kode' => (string)$kode, 'nama' => (string)$nama];
+    })->filter(fn($item) => $item['kode'] !== '')->values()->all();
 @endphp
 
 <div class="space-y-3.5"
@@ -342,6 +347,92 @@
          sendMtToWhatsApp() {
              const text = this.mtFullMessage;
              window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+         },
+
+         // Custom Multi-Sheet Export Excel State
+         exportModalOpen: false,
+         exportBaseUrl: '{{ route($exportRoute) }}',
+         exportLayananOptions: @js($exportLayananOptions),
+         exportSheets: [],
+
+         initDefaultExportSheets() {
+             const opts = this.exportLayananOptions || [];
+             const matchCodes = (pred) => opts.filter(o => pred((o.nama || '').toUpperCase())).map(o => o.kode);
+             this.exportSheets = [
+                 {
+                     name: 'Broadband, Basic, Up To New',
+                     layanan: matchCodes(n => (n.includes('BROADBAND') && !n.includes('FREE')) || n.includes('BASIC') || n.includes('UP TO NEW'))
+                 },
+                 {
+                     name: 'Corporate',
+                     layanan: matchCodes(n => n.includes('CORPORATE') || n.includes('LASTMILE'))
+                 },
+                 {
+                     name: 'SOHO',
+                     layanan: matchCodes(n => n.includes('SOHO') || n.includes('SMALL OFFICE'))
+                 }
+             ];
+         },
+
+         openExportModal() {
+             if (!this.exportSheets || this.exportSheets.length === 0) {
+                 this.initDefaultExportSheets();
+             }
+             this.exportModalOpen = true;
+         },
+
+         addExportSheet() {
+             this.exportSheets.push({
+                 name: 'Sheet ' + (this.exportSheets.length + 1),
+                 layanan: []
+             });
+         },
+
+         removeExportSheet(idx) {
+             if (this.exportSheets.length > 1) {
+                 this.exportSheets.splice(idx, 1);
+             }
+         },
+
+         toggleSheetLayanan(sheetIdx, kode) {
+             const list = this.exportSheets[sheetIdx].layanan;
+             const i = list.indexOf(kode);
+             if (i > -1) {
+                 list.splice(i, 1);
+             } else {
+                 list.push(kode);
+             }
+         },
+
+         buildExportQueryParams(includeLayanan = true) {
+             const params = new URLSearchParams();
+             if (includeLayanan && this.layananFilter) params.append('layanan', this.layananFilter);
+             if (this.groupLayananFilter) params.append('group_layanan', this.groupLayananFilter);
+             if (this.searchQuery) params.append('search', this.searchQuery);
+             if (this.alamatQuery) params.append('alamat', this.alamatQuery);
+             if (this.statusFilter) params.append('status', this.statusFilter);
+             if (this.wilayahFilter) params.append('wilayah', this.wilayahFilter);
+             if (this.bulanFilter) params.append('bulan', this.bulanFilter);
+             if (this.salesFilter) params.append('sales', this.salesFilter);
+             return params;
+         },
+
+         downloadSingleSheetExport() {
+             const params = this.buildExportQueryParams(true);
+             window.location.href = this.exportBaseUrl + '?' + params.toString();
+             this.exportModalOpen = false;
+         },
+
+         downloadCustomMultiSheetExport() {
+             if (!this.exportSheets || this.exportSheets.length === 0) return;
+             const payload = this.exportSheets.map((s, idx) => ({
+                 name: (s.name || '').trim() || ('Sheet ' + (idx + 1)),
+                 layanan: s.layanan || []
+             }));
+             const params = this.buildExportQueryParams(false);
+             params.append('custom_sheets', JSON.stringify(payload));
+             window.location.href = this.exportBaseUrl + '?' + params.toString();
+             this.exportModalOpen = false;
          }
      }">
     
@@ -887,9 +978,10 @@
                     </button>
                     
                     <a id="btnExportExcel"
-                       href="{{ route($exportRoute, request()->query()) }}" 
+                       href="{{ route($exportRoute, request()->query()) }}"
+                       @click.prevent="openExportModal()"
                        class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#00a65a] hover:bg-[#008d4c] text-white text-xs font-semibold transition duration-150 shadow-2xs cursor-pointer"
-                       title="Download data pelanggan ke format Excel">
+                       title="Download data pelanggan ke format Excel (1 Sheet atau Custom Multi-Sheet)">
                         <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                         </svg>
@@ -2182,6 +2274,141 @@
                         </svg>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    </template>
+
+    <!-- ======================================================================= -->
+    <!-- 6. MODAL: EXPORT EXCEL CUSTOM MULTI-SHEET                               -->
+    <!-- ======================================================================= -->
+    <template x-teleport="body">
+    <div x-show="exportModalOpen"
+         x-cloak
+         @keydown.escape.window="exportModalOpen = false"
+         class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+         style="position: fixed; inset: 0; z-index: 99999;">
+        <div @click.away="exportModalOpen = false"
+             class="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Export Excel Data Pelanggan</h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Pilih export 1 sheet standar atau atur beberapa sheet custom per kategori layanan.</p>
+                    </div>
+                </div>
+                <button type="button" @click="exportModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-5 space-y-4 overflow-y-auto flex-1">
+
+                <!-- Quick Export 1 Sheet -->
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold text-slate-900 dark:text-white">Export 1 Sheet (Sesuai Filter Tabel Saat Ini)</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400">Unduh langsung 1 sheet berisi data sesuai seluruh filter yang aktif di halaman.</div>
+                    </div>
+                    <button type="button"
+                            @click="downloadSingleSheetExport()"
+                            class="shrink-0 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-semibold transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        <span>Export 1 Sheet</span>
+                    </button>
+                </div>
+
+                <!-- Custom Multi-Sheet Builder -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Custom Multi-Sheet</h4>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Filter status, group layanan, wilayah, bulan &amp; sales di halaman tetap diterapkan ke semua sheet.</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button"
+                                    @click="initDefaultExportSheets()"
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 transition cursor-pointer">
+                                Reset Preset
+                            </button>
+                            <button type="button"
+                                    @click="addExportSheet()"
+                                    class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition cursor-pointer">
+                                + Tambah Sheet
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <template x-for="(sheet, sIdx) in exportSheets" :key="sIdx">
+                            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-mono text-[11px] font-bold shrink-0"
+                                              x-text="'Sheet ' + (sIdx + 1)"></span>
+                                        <input type="text"
+                                               x-model="sheet.name"
+                                               maxlength="31"
+                                               placeholder="Nama Sheet (maks 31 karakter)..."
+                                               class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500">
+                                    </div>
+                                    <button type="button"
+                                            x-show="exportSheets.length > 1"
+                                            @click="removeExportSheet(sIdx)"
+                                            class="px-2 py-1 rounded-lg text-[11px] font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 transition cursor-pointer shrink-0">
+                                        Hapus
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pilih Layanan di Sheet Ini:</span>
+                                        <span class="text-[10px] font-mono text-slate-400"
+                                              x-text="sheet.layanan.length > 0 ? (sheet.layanan.length + ' layanan dipilih') : 'Kosong = Semua Layanan'"></span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <template x-for="opt in exportLayananOptions" :key="opt.kode">
+                                            <button type="button"
+                                                    @click="toggleSheetLayanan(sIdx, opt.kode)"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] border transition cursor-pointer"
+                                                    :class="sheet.layanan.includes(opt.kode)
+                                                        ? 'bg-emerald-600 text-white border-emerald-600 font-semibold shadow-2xs'
+                                                        : 'bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'">
+                                                <span x-show="sheet.layanan.includes(opt.kode)" class="text-[10px] font-bold">&#10003;</span>
+                                                <span x-text="opt.nama"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 shrink-0">
+                <button type="button"
+                        @click="exportModalOpen = false"
+                        class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button"
+                        @click="downloadCustomMultiSheetExport()"
+                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#00a65a] hover:bg-[#008d4c] text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    <span x-text="'Download Excel (' + exportSheets.length + ' Sheet)'"></span>
+                </button>
             </div>
         </div>
     </div>

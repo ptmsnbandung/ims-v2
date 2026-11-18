@@ -20,13 +20,31 @@ class ExcelExportService
      */
     public static function generateXlsx(string $title, string $subtitle, array $headers, array $widths, callable $chunkCallback): string
     {
-        $tmpSheet = tempnam(sys_get_temp_dir(), 'xlsx_sheet_');
-        $fh = fopen($tmpSheet, 'w');
-        if (!$fh) {
-            throw new Exception("Gagal membuat temporary worksheet file.");
+        return self::generateMultiSheetXlsx([
+            [
+                'name' => 'Data Pelanggan',
+                'title' => $title,
+                'subtitle' => $subtitle,
+                'callback' => $chunkCallback,
+            ],
+        ], $headers, $widths);
+    }
+
+    /**
+     * Generate multi-sheet native .xlsx (OpenXML) file without external dependencies.
+     *
+     * @param array $sheets Array of ['name' => string, 'title' => string, 'subtitle' => string, 'callback' => callable]
+     * @param array $headers
+     * @param array $widths
+     * @return string Absolute path to generated temporary .xlsx file
+     * @throws Exception
+     */
+    public static function generateMultiSheetXlsx(array $sheets, array $headers, array $widths): string
+    {
+        if (empty($sheets)) {
+            throw new Exception("Minimal 1 sheet harus didefinisikan.");
         }
 
-        // Columns definition
         $colsXml = '';
         if (!empty($widths)) {
             $colsXml .= '<cols>';
@@ -38,116 +56,141 @@ class ExcelExportService
             $colsXml .= '</cols>';
         }
 
-        fwrite($fh, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n");
-        fwrite($fh, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' . "\n");
-        // Freeze pane below header (row 4)
-        fwrite($fh, '  <sheetViews><sheetView tabSelected="1" workbookViewId="0"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' . "\n");
-        fwrite($fh, '  ' . $colsXml . "\n");
-        fwrite($fh, '  <sheetData>' . "\n");
+        $tmpSheets = [];
+        $usedNames = [];
 
-        $rIdx = 1;
+        try {
+            foreach ($sheets as $idx => $sheet) {
+                $sheetNum = $idx + 1;
+                $sheetName = self::sanitizeSheetName((string)($sheet['name'] ?? ''), $sheetNum, $usedNames);
+                $title = (string)($sheet['title'] ?? '');
+                $subtitle = (string)($sheet['subtitle'] ?? '');
+                $chunkCallback = $sheet['callback'];
 
-        // Row 1: Document Title (Dark Corporate Slate, 14pt Bold)
-        fwrite($fh, '<row r="' . $rIdx . '" ht="26" customHeight="1"><c r="A' . $rIdx . '" s="1" t="inlineStr"><is><t>' . htmlspecialchars($title, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
-        $rIdx++;
-
-        // Row 2: Subtitle & Export Meta (Muted Gray, 9.5pt)
-        fwrite($fh, '<row r="' . $rIdx . '" ht="18" customHeight="1"><c r="A' . $rIdx . '" s="2" t="inlineStr"><is><t>' . htmlspecialchars($subtitle, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
-        $rIdx++;
-
-        // Row 3: Spacer
-        fwrite($fh, '<row r="' . $rIdx . '" ht="8" customHeight="1"></row>' . "\n");
-        $rIdx++;
-
-        // Row 4: Table Header (Corporate Slate Fill #1E293B, White Bold Text)
-        fwrite($fh, '<row r="' . $rIdx . '" ht="28" customHeight="1">');
-        $cIdx = 0;
-        foreach ($headers as $h) {
-            $colLetter = self::colLetter($cIdx);
-            fwrite($fh, '<c r="' . $colLetter . $rIdx . '" s="3" t="inlineStr"><is><t>' . htmlspecialchars($h, ENT_XML1, 'UTF-8') . '</t></is></c>');
-            $cIdx++;
-        }
-        fwrite($fh, '</row>' . "\n");
-        $rIdx++;
-
-        // Row 5+: Data Rows via Streaming Callback
-        $rowNum = 0;
-        $chunkCallback(function (array $row) use ($fh, &$rIdx, &$rowNum) {
-            $isZebra = ($rowNum % 2 === 1);
-            fwrite($fh, '<row r="' . $rIdx . '" ht="22" customHeight="1">');
-            $cIdx = 0;
-            foreach ($row as $cell) {
-                $colLetter = ExcelExportService::colLetter($cIdx);
-                $val = is_null($cell) ? '' : (string)$cell;
-
-                // Alignment determination: Numbers, IDs, Dates, Status to Center
-                $isCenter = in_array($cIdx, [0, 1, 3, 4, 5, 8, 9, 10, 13, 17, 19, 20]);
-                $style = $isZebra ? ($isCenter ? 7 : 6) : ($isCenter ? 5 : 4);
-
-                // Status Column (Index 17): Badge Styling
-                if ($cIdx === 17) {
-                    if (stripos($val, 'Aktif') !== false || stripos($val, 'Berlangganan') !== false) {
-                        $style = 8; // Emerald badge
-                    } elseif (stripos($val, 'Isolir') !== false || stripos($val, 'Suspend') !== false) {
-                        $style = 9; // Rose badge
-                    } elseif (stripos($val, 'Pending') !== false || stripos($val, 'Survey') !== false || stripos($val, 'Instalasi') !== false) {
-                        $style = 10; // Amber badge
-                    }
+                $tmpSheet = tempnam(sys_get_temp_dir(), 'xlsx_sheet_');
+                $fh = fopen($tmpSheet, 'w');
+                if (!$fh) {
+                    throw new Exception("Gagal membuat temporary worksheet file.");
                 }
 
-                fwrite($fh, '<c r="' . $colLetter . $rIdx . '" s="' . $style . '" t="inlineStr"><is><t>' . htmlspecialchars($val, ENT_XML1, 'UTF-8') . '</t></is></c>');
-                $cIdx++;
+                fwrite($fh, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n");
+                fwrite($fh, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' . "\n");
+                $tabSelected = ($sheetNum === 1) ? ' tabSelected="1"' : '';
+                fwrite($fh, '  <sheetViews><sheetView' . $tabSelected . ' workbookViewId="0"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' . "\n");
+                fwrite($fh, '  ' . $colsXml . "\n");
+                fwrite($fh, '  <sheetData>' . "\n");
+
+                $rIdx = 1;
+                fwrite($fh, '<row r="' . $rIdx . '" ht="26" customHeight="1"><c r="A' . $rIdx . '" s="1" t="inlineStr"><is><t>' . htmlspecialchars($title, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
+                $rIdx++;
+
+                fwrite($fh, '<row r="' . $rIdx . '" ht="18" customHeight="1"><c r="A' . $rIdx . '" s="2" t="inlineStr"><is><t>' . htmlspecialchars($subtitle, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
+                $rIdx++;
+
+                fwrite($fh, '<row r="' . $rIdx . '" ht="8" customHeight="1"></row>' . "\n");
+                $rIdx++;
+
+                fwrite($fh, '<row r="' . $rIdx . '" ht="28" customHeight="1">');
+                $cIdx = 0;
+                foreach ($headers as $h) {
+                    $colLetter = self::colLetter($cIdx);
+                    fwrite($fh, '<c r="' . $colLetter . $rIdx . '" s="3" t="inlineStr"><is><t>' . htmlspecialchars($h, ENT_XML1, 'UTF-8') . '</t></is></c>');
+                    $cIdx++;
+                }
+                fwrite($fh, '</row>' . "\n");
+                $rIdx++;
+
+                $rowNum = 0;
+                $chunkCallback(function (array $row) use ($fh, &$rIdx, &$rowNum) {
+                    $isZebra = ($rowNum % 2 === 1);
+                    fwrite($fh, '<row r="' . $rIdx . '" ht="22" customHeight="1">');
+                    $cIdx = 0;
+                    foreach ($row as $cell) {
+                        $colLetter = ExcelExportService::colLetter($cIdx);
+                        $val = is_null($cell) ? '' : (string)$cell;
+
+                        // Alignment determination: Numbers, IDs, Dates, Status to Center
+                        $isCenter = in_array($cIdx, [0, 1, 3, 4, 5, 8, 9, 10, 13, 17, 19, 20]);
+                        $style = $isZebra ? ($isCenter ? 7 : 6) : ($isCenter ? 5 : 4);
+
+                        // Status Column (Index 17): Badge Styling
+                        if ($cIdx === 17) {
+                            if (stripos($val, 'Aktif') !== false || stripos($val, 'Berlangganan') !== false) {
+                                $style = 8; // Emerald badge
+                            } elseif (stripos($val, 'Isolir') !== false || stripos($val, 'Suspend') !== false) {
+                                $style = 9; // Rose badge
+                            } elseif (stripos($val, 'Pending') !== false || stripos($val, 'Survey') !== false || stripos($val, 'Instalasi') !== false) {
+                                $style = 10; // Amber badge
+                            }
+                        }
+
+                        fwrite($fh, '<c r="' . $colLetter . $rIdx . '" s="' . $style . '" t="inlineStr"><is><t>' . htmlspecialchars($val, ENT_XML1, 'UTF-8') . '</t></is></c>');
+                        $cIdx++;
+                    }
+                    fwrite($fh, '</row>' . "\n");
+                    $rIdx++;
+                    $rowNum++;
+                });
+
+                fwrite($fh, '  </sheetData>' . "\n");
+                fwrite($fh, '</worksheet>');
+                fclose($fh);
+
+                $tmpSheets[] = [
+                    'num' => $sheetNum,
+                    'name' => $sheetName,
+                    'file' => $tmpSheet,
+                ];
             }
-            fwrite($fh, '</row>' . "\n");
-            $rIdx++;
-            $rowNum++;
-        });
 
-        fwrite($fh, '  </sheetData>' . "\n");
-        fwrite($fh, '</worksheet>');
-        fclose($fh);
+            // Package into valid OpenXML .xlsx ZIP container
+            $tmpZip = tempnam(sys_get_temp_dir(), 'xlsx_zip_') . '.xlsx';
+            $zip = new ZipArchive();
+            if ($zip->open($tmpZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+                throw new Exception("Gagal membuat arsip XLSX.");
+            }
 
-        // Package into valid OpenXML .xlsx ZIP container
-        $tmpZip = tempnam(sys_get_temp_dir(), 'xlsx_zip_') . '.xlsx';
-        $zip = new ZipArchive();
-        if ($zip->open($tmpZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            @unlink($tmpSheet);
-            throw new Exception("Gagal membuat arsip XLSX.");
-        }
+            // 1. [Content_Types].xml
+            $sheetOverrides = '';
+            $workbookRels = '';
+            $workbookSheets = '';
+            foreach ($tmpSheets as $s) {
+                $n = $s['num'];
+                $sheetOverrides .= "\n" . '  <Override PartName="/xl/worksheets/sheet' . $n . '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+                $workbookRels .= "\n" . '  <Relationship Id="rId' . $n . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' . $n . '.xml"/>';
+                $workbookSheets .= "\n" . '    <sheet name="' . htmlspecialchars($s['name'], ENT_XML1, 'UTF-8') . '" sheetId="' . $n . '" r:id="rId' . $n . '"/>';
+            }
+            $stylesRelId = count($tmpSheets) + 1;
 
-        // 1. [Content_Types].xml
-        $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
-  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' . $sheetOverrides . '
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 </Types>');
 
-        // 2. _rels/.rels
-        $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            // 2. _rels/.rels
+            $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
 </Relationships>');
 
-        // 3. xl/_rels/workbook.xml.rels
-        $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+            // 3. xl/_rels/workbook.xml.rels
+            $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' . $workbookRels . '
+  <Relationship Id="rId' . $stylesRelId . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>');
 
-        // 4. xl/workbook.xml
-        $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            // 4. xl/workbook.xml
+            $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <sheets>
-    <sheet name="Data Pelanggan" sheetId="1" r:id="rId1"/>
+  <sheets>' . $workbookSheets . '
   </sheets>
 </workbook>');
 
-        // 5. xl/styles.xml
-        $zip->addFromString('xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            // 5. xl/styles.xml
+            $zip->addFromString('xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <fonts count="7">
     <!-- 0: Default Data Font -->
@@ -219,12 +262,42 @@ class ExcelExportService
   </cellXfs>
 </styleSheet>');
 
-        // 6. xl/worksheets/sheet1.xml
-        $zip->addFile($tmpSheet, 'xl/worksheets/sheet1.xml');
-        $zip->close();
-        @unlink($tmpSheet);
+            // 6. xl/worksheets/sheet{1..N}.xml
+            foreach ($tmpSheets as $s) {
+                $zip->addFile($s['file'], 'xl/worksheets/sheet' . $s['num'] . '.xml');
+            }
+            $zip->close();
 
-        return $tmpZip;
+            return $tmpZip;
+        } finally {
+            foreach ($tmpSheets as $s) {
+                @unlink($s['file']);
+            }
+        }
+    }
+
+    /**
+     * Sanitize an Excel worksheet tab name to conform to OOXML rules (<= 31 chars, unique, no invalid chars).
+     */
+    public static function sanitizeSheetName(string $name, int $sheetNum, array &$usedNames): string
+    {
+        $clean = preg_replace('/[\\\\\\/?*:\\[\\]]/', ' ', trim($name));
+        $clean = trim(preg_replace('/\s+/', ' ', $clean));
+        if ($clean === '') {
+            $clean = "Sheet {$sheetNum}";
+        }
+
+        $base = mb_substr($clean, 0, 31);
+        $candidate = $base;
+        $counter = 2;
+        while (in_array(mb_strtolower($candidate), $usedNames, true)) {
+            $suffix = " ({$counter})";
+            $candidate = mb_substr($base, 0, 31 - mb_strlen($suffix)) . $suffix;
+            $counter++;
+        }
+
+        $usedNames[] = mb_strtolower($candidate);
+        return $candidate;
     }
 
     /**

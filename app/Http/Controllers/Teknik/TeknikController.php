@@ -2859,6 +2859,7 @@ class TeknikController extends Controller
             'Email',
             'Layanan',
             'Bandwidth (Mbps)',
+            'Harga / Bulan',
             'Group Layanan',
             'Jenis Bangunan',
             'Alamat Pemasangan',
@@ -2872,7 +2873,7 @@ class TeknikController extends Controller
             'Terakhir Update',
         ];
 
-        $widths = [6, 18, 32, 14, 20, 18, 28, 26, 16, 16, 16, 40, 12, 20, 20, 20, 20, 22, 20, 20];
+        $widths = [6, 18, 32, 14, 20, 18, 28, 26, 16, 18, 16, 16, 40, 12, 20, 20, 20, 20, 22, 20, 20];
 
         $xlsxFile = ExcelExportService::generateXlsx(
             $title,
@@ -2896,6 +2897,10 @@ class TeknikController extends Controller
                             default => (!empty($r->status_reg) ? 'Status #' . $r->status_reg : 'Aktif'),
                         };
 
+                        $hargaPerBulan = (!empty($r->harga_bandwith) && (float)$r->harga_bandwith > 0)
+                            ? 'Rp ' . number_format((float)$r->harga_bandwith, 0, ',', '.')
+                            : '-';
+
                         $writeRow([
                             $no++,
                             $r->nomor_internet ?? '-',
@@ -2906,6 +2911,7 @@ class TeknikController extends Controller
                             $r->email ?? '-',
                             $r->nama_kategori_bandwith ?? ($r->alias_nama_kategori ?? '-'),
                             $r->nominal_bandwith ?? '-',
+                            $hargaPerBulan,
                             $r->group_layanan ?? 'MEDIANET',
                             $r->jenis_bangunan ?? '-',
                             $r->alamat_p ?? ($r->alamat_pasang ?? '-'),

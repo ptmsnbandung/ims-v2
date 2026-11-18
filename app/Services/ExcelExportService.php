@@ -81,11 +81,11 @@ class ExcelExportService
                 $val = is_null($cell) ? '' : (string)$cell;
 
                 // Alignment determination: Numbers, IDs, Dates, Status to Center
-                $isCenter = in_array($cIdx, [0, 1, 3, 4, 5, 8, 9, 12, 16, 18, 19]);
+                $isCenter = in_array($cIdx, [0, 1, 3, 4, 5, 8, 9, 10, 13, 17, 19, 20]);
                 $style = $isZebra ? ($isCenter ? 7 : 6) : ($isCenter ? 5 : 4);
 
-                // Status Column (Index 16): Badge Styling
-                if ($cIdx === 16) {
+                // Status Column (Index 17): Badge Styling
+                if ($cIdx === 17) {
                     if (stripos($val, 'Aktif') !== false || stripos($val, 'Berlangganan') !== false) {
                         $style = 8; // Emerald badge
                     } elseif (stripos($val, 'Isolir') !== false || stripos($val, 'Suspend') !== false) {

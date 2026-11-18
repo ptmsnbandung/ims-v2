@@ -17,6 +17,29 @@
         $nama = is_object($layanan) ? ($layanan->nama_kategori_bandwith ?? $kode) : (is_array($layanan) ? ($layanan['nama_kategori_bandwith'] ?? $kode) : (string)$layanan);
         return ['kode' => (string)$kode, 'nama' => (string)$nama];
     })->filter(fn($item) => $item['kode'] !== '')->values()->all();
+
+    $matchExportLayanan = function (callable $pred) use ($exportLayananOptions): array {
+        return collect($exportLayananOptions)
+            ->filter(fn($opt) => $pred(strtoupper((string)($opt['nama'] ?? ''))))
+            ->pluck('kode')
+            ->values()
+            ->all();
+    };
+
+    $defaultExportSheets = [
+        [
+            'name' => 'Broadband, Basic, Up To New',
+            'layanan' => $matchExportLayanan(fn($n) => (str_contains($n, 'BROADBAND') && !str_contains($n, 'FREE')) || str_contains($n, 'BASIC') || str_contains($n, 'UP TO NEW')),
+        ],
+        [
+            'name' => 'Corporate',
+            'layanan' => $matchExportLayanan(fn($n) => str_contains($n, 'CORPORATE') || str_contains($n, 'LASTMILE')),
+        ],
+        [
+            'name' => 'SOHO',
+            'layanan' => $matchExportLayanan(fn($n) => str_contains($n, 'SOHO') || str_contains($n, 'SMALL OFFICE')),
+        ],
+    ];
 @endphp
 
 <div class="space-y-3.5"
@@ -353,25 +376,11 @@
          exportModalOpen: false,
          exportBaseUrl: '{{ route($exportRoute) }}',
          exportLayananOptions: @js($exportLayananOptions),
-         exportSheets: [],
+         defaultExportSheets: @js($defaultExportSheets),
+         exportSheets: @js($defaultExportSheets),
 
          initDefaultExportSheets() {
-             const opts = this.exportLayananOptions || [];
-             const matchCodes = (pred) => opts.filter(o => pred((o.nama || '').toUpperCase())).map(o => o.kode);
-             this.exportSheets = [
-                 {
-                     name: 'Broadband, Basic, Up To New',
-                     layanan: matchCodes(n => (n.includes('BROADBAND') && !n.includes('FREE')) || n.includes('BASIC') || n.includes('UP TO NEW'))
-                 },
-                 {
-                     name: 'Corporate',
-                     layanan: matchCodes(n => n.includes('CORPORATE') || n.includes('LASTMILE'))
-                 },
-                 {
-                     name: 'SOHO',
-                     layanan: matchCodes(n => n.includes('SOHO') || n.includes('SMALL OFFICE'))
-                 }
-             ];
+             this.exportSheets = JSON.parse(JSON.stringify(this.defaultExportSheets || []));
          },
 
          openExportModal() {
@@ -402,6 +411,14 @@
              } else {
                  list.push(kode);
              }
+         },
+
+         clearSheetLayanan(sheetIdx) {
+             this.exportSheets[sheetIdx].layanan = [];
+         },
+
+         selectAllSheetLayanan(sheetIdx) {
+             this.exportSheets[sheetIdx].layanan = (this.exportLayananOptions || []).map(o => o.kode);
          },
 
          buildExportQueryParams(includeLayanan = true) {
@@ -2289,7 +2306,7 @@
          class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
          style="position: fixed; inset: 0; z-index: 99999;">
         <div @click.away="exportModalOpen = false"
-             class="relative z-10 w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+             class="relative z-10 w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[88vh]">
 
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 shrink-0">
@@ -2301,20 +2318,20 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white">Export Excel Data Pelanggan</h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Pilih export 1 sheet standar atau atur beberapa sheet custom per kategori layanan.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Unduh 1 sheet langsung atau atur pengelompokan layanan ke beberapa sheet horizontal.</p>
                     </div>
                 </div>
                 <button type="button" @click="exportModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
             </div>
 
             <!-- Content -->
-            <div class="p-5 space-y-4 overflow-y-auto flex-1">
+            <div class="p-5 space-y-4 overflow-y-auto flex-1 min-h-0">
 
-                <!-- Quick Export 1 Sheet -->
-                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
+                <!-- Quick Export 1 Sheet Bar -->
+                <div class="px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="min-w-0">
                         <div class="text-xs font-bold text-slate-900 dark:text-white">Export 1 Sheet (Sesuai Filter Tabel Saat Ini)</div>
-                        <div class="text-[11px] text-slate-500 dark:text-slate-400">Unduh langsung 1 sheet berisi data sesuai seluruh filter yang aktif di halaman.</div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400">Unduh langsung 1 sheet standar sesuai seluruh filter yang aktif di halaman.</div>
                     </div>
                     <button type="button"
                             @click="downloadSingleSheetExport()"
@@ -2328,7 +2345,7 @@
 
                 <!-- Custom Multi-Sheet Builder -->
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between gap-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
                             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Custom Multi-Sheet</h4>
                             <p class="text-[11px] text-slate-500 dark:text-slate-400">Filter status, group layanan, wilayah, bulan &amp; sales di halaman tetap diterapkan ke semua sheet.</p>
@@ -2347,43 +2364,63 @@
                         </div>
                     </div>
 
-                    <div class="space-y-2.5">
+                    <!-- Horizontal Grid Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 items-stretch">
                         <template x-for="(sheet, sIdx) in exportSheets" :key="sIdx">
-                            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2.5">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2 flex-1 min-w-0">
-                                        <span class="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-mono text-[11px] font-bold shrink-0"
-                                              x-text="'Sheet ' + (sIdx + 1)"></span>
+                            <div class="flex flex-col justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 p-3.5 shadow-2xs space-y-3">
+                                <!-- Card Header: Badge, Counter, Delete & Sheet Name Input -->
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between gap-1.5">
+                                        <div class="flex items-center gap-1.5 min-w-0">
+                                            <span class="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-mono text-[11px] font-bold shrink-0"
+                                                  x-text="'Sheet ' + (sIdx + 1)"></span>
+                                            <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate"
+                                                  x-text="sheet.layanan.length > 0 ? (sheet.layanan.length + ' dipilih') : 'Semua Layanan'"></span>
+                                        </div>
+                                        <button type="button"
+                                                x-show="exportSheets.length > 1"
+                                                @click="removeExportSheet(sIdx)"
+                                                class="px-1.5 py-0.5 rounded-lg text-[11px] font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 transition cursor-pointer shrink-0">
+                                            Hapus
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Nama Sheet</label>
                                         <input type="text"
                                                x-model="sheet.name"
                                                maxlength="31"
                                                placeholder="Nama Sheet (maks 31 karakter)..."
-                                               class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500">
+                                               class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500">
                                     </div>
-                                    <button type="button"
-                                            x-show="exportSheets.length > 1"
-                                            @click="removeExportSheet(sIdx)"
-                                            class="px-2 py-1 rounded-lg text-[11px] font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 transition cursor-pointer shrink-0">
-                                        Hapus
-                                    </button>
                                 </div>
 
-                                <div>
+                                <!-- Card Body: Layanan Checklist -->
+                                <div class="flex-1 flex flex-col min-h-0 pt-1 border-t border-slate-200/70 dark:border-slate-800">
                                     <div class="flex items-center justify-between mb-1.5">
-                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pilih Layanan di Sheet Ini:</span>
-                                        <span class="text-[10px] font-mono text-slate-400"
-                                              x-text="sheet.layanan.length > 0 ? (sheet.layanan.length + ' layanan dipilih') : 'Kosong = Semua Layanan'"></span>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Kategori Layanan</span>
+                                        <div class="flex items-center gap-2 text-[10px] font-semibold">
+                                            <button type="button" @click="selectAllSheetLayanan(sIdx)" class="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Semua</button>
+                                            <span class="text-slate-300 dark:text-slate-700">|</span>
+                                            <button type="button" @click="clearSheetLayanan(sIdx)" class="text-slate-500 dark:text-slate-400 hover:underline cursor-pointer">Reset</button>
+                                        </div>
                                     </div>
-                                    <div class="flex flex-wrap gap-1.5">
+
+                                    <div class="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-1">
                                         <template x-for="opt in exportLayananOptions" :key="opt.kode">
                                             <button type="button"
                                                     @click="toggleSheetLayanan(sIdx, opt.kode)"
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] border transition cursor-pointer"
+                                                    class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] border transition cursor-pointer text-left"
                                                     :class="sheet.layanan.includes(opt.kode)
-                                                        ? 'bg-emerald-600 text-white border-emerald-600 font-semibold shadow-2xs'
-                                                        : 'bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'">
-                                                <span x-show="sheet.layanan.includes(opt.kode)" class="text-[10px] font-bold">&#10003;</span>
-                                                <span x-text="opt.nama"></span>
+                                                        ? 'bg-emerald-600 text-white border-emerald-700 font-semibold shadow-2xs'
+                                                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:bg-slate-800'"
+                                                    :style="sheet.layanan.includes(opt.kode) ? 'background-color: #059669; color: #ffffff; border-color: #047857;' : ''">
+                                                <span class="w-4 h-4 rounded flex items-center justify-center shrink-0 text-[10px] font-bold border"
+                                                      :class="sheet.layanan.includes(opt.kode) ? 'bg-white text-emerald-700 border-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-transparent'"
+                                                      :style="sheet.layanan.includes(opt.kode) ? 'background-color: #ffffff; color: #047857; border-color: #ffffff;' : ''">
+                                                    &#10003;
+                                                </span>
+                                                <span class="truncate" x-text="opt.nama"></span>
                                             </button>
                                         </template>
                                     </div>
@@ -2395,7 +2432,7 @@
             </div>
 
             <!-- Footer -->
-            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 shrink-0">
+            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 shrink-0">
                 <button type="button"
                         @click="exportModalOpen = false"
                         class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">

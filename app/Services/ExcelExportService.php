@@ -18,13 +18,14 @@ class ExcelExportService
      * @return string Absolute path to generated temporary .xlsx file
      * @throws Exception
      */
-    public static function generateXlsx(string $title, string $subtitle, array $headers, array $widths, callable $chunkCallback): string
+    public static function generateXlsx(string $title, string $subtitle, array $headers, array $widths, callable $chunkCallback, ?string $statsLine = null): string
     {
         return self::generateMultiSheetXlsx([
             [
                 'name' => 'Data Pelanggan',
                 'title' => $title,
                 'subtitle' => $subtitle,
+                'stats' => $statsLine,
                 'callback' => $chunkCallback,
             ],
         ], $headers, $widths);
@@ -33,7 +34,7 @@ class ExcelExportService
     /**
      * Generate multi-sheet native .xlsx (OpenXML) file without external dependencies.
      *
-     * @param array $sheets Array of ['name' => string, 'title' => string, 'subtitle' => string, 'callback' => callable]
+     * @param array $sheets Array of ['name' => string, 'title' => string, 'subtitle' => string, 'stats' => ?string, 'callback' => callable]
      * @param array $headers
      * @param array $widths
      * @return string Absolute path to generated temporary .xlsx file
@@ -65,6 +66,7 @@ class ExcelExportService
                 $sheetName = self::sanitizeSheetName((string)($sheet['name'] ?? ''), $sheetNum, $usedNames);
                 $title = (string)($sheet['title'] ?? '');
                 $subtitle = (string)($sheet['subtitle'] ?? '');
+                $statsLine = trim((string)($sheet['stats'] ?? ''));
                 $chunkCallback = $sheet['callback'];
 
                 $tmpSheet = tempnam(sys_get_temp_dir(), 'xlsx_sheet_');
@@ -87,7 +89,11 @@ class ExcelExportService
                 fwrite($fh, '<row r="' . $rIdx . '" ht="18" customHeight="1"><c r="A' . $rIdx . '" s="2" t="inlineStr"><is><t>' . htmlspecialchars($subtitle, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
                 $rIdx++;
 
-                fwrite($fh, '<row r="' . $rIdx . '" ht="8" customHeight="1"></row>' . "\n");
+                if ($statsLine !== '') {
+                    fwrite($fh, '<row r="' . $rIdx . '" ht="22" customHeight="1"><c r="A' . $rIdx . '" s="11" t="inlineStr"><is><t>' . htmlspecialchars($statsLine, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
+                } else {
+                    fwrite($fh, '<row r="' . $rIdx . '" ht="8" customHeight="1"></row>' . "\n");
+                }
                 $rIdx++;
 
                 fwrite($fh, '<row r="' . $rIdx . '" ht="28" customHeight="1">');
@@ -192,7 +198,7 @@ class ExcelExportService
             // 5. xl/styles.xml
             $zip->addFromString('xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <fonts count="7">
+  <fonts count="8">
     <!-- 0: Default Data Font -->
     <font><sz val="10"/><name val="Segoe UI"/><color rgb="FF334155"/></font>
     <!-- 1: Title Font -->
@@ -207,6 +213,8 @@ class ExcelExportService
     <font><b/><sz val="9.5"/><name val="Segoe UI"/><color rgb="FF991B1B"/></font>
     <!-- 6: Status Pending Font -->
     <font><b/><sz val="9.5"/><name val="Segoe UI"/><color rgb="FF854D0E"/></font>
+    <!-- 7: Stats Summary Font -->
+    <font><b/><sz val="10.5"/><name val="Segoe UI"/><color rgb="FF047857"/></font>
   </fonts>
   <fills count="7">
     <fill><patternFill patternType="none"/></fill>
@@ -236,7 +244,7 @@ class ExcelExportService
   <cellStyleXfs count="1">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   </cellStyleXfs>
-  <cellXfs count="11">
+  <cellXfs count="12">
     <!-- 0: Default -->
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
     <!-- 1: Title -->
@@ -259,6 +267,8 @@ class ExcelExportService
     <xf numFmtId="0" fontId="5" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center"/></xf>
     <!-- 10: Status Pending Badge -->
     <xf numFmtId="0" fontId="6" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center"/></xf>
+    <!-- 11: Stats Summary Row -->
+    <xf numFmtId="0" fontId="7" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
   </cellXfs>
 </styleSheet>');
 

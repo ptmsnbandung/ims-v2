@@ -2919,6 +2919,20 @@ class TeknikController extends Controller
             };
         };
 
+        $computeSheetStats = function ($q): array {
+            $agg = (clone $q)
+                ->selectRaw('COUNT(*) as total_pelanggan, COALESCE(SUM(CASE WHEN harga_bandwith > 0 THEN harga_bandwith ELSE 0 END), 0) as total_harga')
+                ->first();
+            $totalPelanggan = (int)($agg->total_pelanggan ?? 0);
+            $totalHarga = (float)($agg->total_harga ?? 0);
+
+            return [
+                'total_pelanggan' => number_format($totalPelanggan, 0, ',', '.'),
+                'total_harga' => 'Rp ' . number_format($totalHarga, 0, ',', '.'),
+                'stats_line' => 'TOTAL PELANGGAN: ' . number_format($totalPelanggan, 0, ',', '.') . ' Pelanggan   |   TOTAL HARGA / BULAN: Rp ' . number_format($totalHarga, 0, ',', '.'),
+            ];
+        };
+
         $xlsxFile = null;
         if ($request->filled('custom_sheets')) {
             $customSheets = json_decode((string)$request->input('custom_sheets'), true);
@@ -2944,13 +2958,14 @@ class TeknikController extends Controller
                         $layananDesc = 'Semua Layanan';
                     }
 
-                    $sheetTotal = (clone $sheetQuery)->count();
-                    $sheetSubtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Total: ' . number_format($sheetTotal, 0, ',', '.') . ' Pelanggan | Layanan: ' . $layananDesc . ' | Filter: ' . $filterLabel;
+                    $st = $computeSheetStats($sheetQuery);
+                    $sheetSubtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Layanan: ' . $layananDesc . ' | Filter: ' . $filterLabel;
 
                     $sheetsConfig[] = [
                         'name' => $sheetName,
                         'title' => $title . ' - ' . strtoupper($sheetName),
                         'subtitle' => $sheetSubtitle,
+                        'stats' => $st['stats_line'],
                         'callback' => $buildSheetCallback($sheetQuery),
                     ];
                 }
@@ -2965,9 +2980,9 @@ class TeknikController extends Controller
             if ($request->filled('layanan')) {
                 $query->where('kode_kategori_bandwith', $request->layanan);
             }
-            $totalRecords = (clone $query)->count();
-            $subtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Total: ' . number_format($totalRecords, 0, ',', '.') . ' Pelanggan | Filter: ' . $filterLabel;
-            $xlsxFile = ExcelExportService::generateXlsx($title, $subtitle, $headers, $widths, $buildSheetCallback($query));
+            $st = $computeSheetStats($query);
+            $subtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Filter: ' . $filterLabel;
+            $xlsxFile = ExcelExportService::generateXlsx($title, $subtitle, $headers, $widths, $buildSheetCallback($query), $st['stats_line']);
         }
 
         $downloadFilename = 'Data_Pelanggan_IMS_' . date('Ymd_His') . '.xlsx';

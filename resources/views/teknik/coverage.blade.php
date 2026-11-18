@@ -305,41 +305,7 @@
                             </div>
                         </div>
                     </template>
-
-                    <!-- Preset Selector from Master Database -->
-                    <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                        <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                            <span class="flex items-center gap-1">
-                                <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                                <span>Pilih ODP dari Database:</span>
-                            </span>
-                            <span class="text-[9px] text-sky-600 dark:text-sky-400 font-mono font-bold">{{ count($odps) }} ODP Aktif</span>
-                        </label>
-                        <select 
-                            @change="selectOdpPreset($event.target.value)" 
-                            class="w-full h-8.5 px-2.5 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 cursor-pointer"
-                        >
-                            <option value="">-- Pilih ODP Master Database ({{ count($odps) }} Titik ODP) --</option>
-                            @php
-                                $odpsGrouped = collect($odps)->groupBy('olt_name');
-                            @endphp
-                            @foreach($odpsGrouped as $oltName => $group)
-                                <optgroup label="🏢 {{ $oltName }} ({{ count($group) }} Titik ODP)">
-                                    @foreach($group as $o)
-                                        <option value="{{ $o['lat'] }},{{ $o['lng'] }}|{{ $o['kode_odp'] }}">
-                                             {{ $o['name_odp'] }} ({{ $o['kode_odp'] }}) - {{ $o['kode_pon'] }}
-                                        </option>
-                                    @endforeach
-                                </optgroup>
-                            @endforeach
-                        </select>
-                    </div>
                 </form>
-
-                <div class="p-2 rounded-lg flex items-center gap-1.5 text-[10px] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                    <span>💡</span>
-                    <span>Format: <b>Latitude, Longitude</b>, atau klik/geser pin langsung pada peta untuk titik presisi.</span>
-                </div>
             </div>
 
             <!-- Coverage Evaluation Result Card -->

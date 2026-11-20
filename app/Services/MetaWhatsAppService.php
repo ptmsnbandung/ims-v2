@@ -179,6 +179,8 @@ class MetaWhatsAppService
 
         try {
             $url = "{$this->baseUrl}/{$this->phoneNumberId}/messages";
+            Log::info('Meta WhatsApp sendTemplateMessage Payload: ' . json_encode($payload));
+
             $response = Http::withToken($this->token)
                 ->timeout(15)
                 ->post($url, $payload);
@@ -196,6 +198,10 @@ class MetaWhatsAppService
 
             $errorData = $response->json()['error'] ?? [];
             $errorMessage = $errorData['message'] ?? ('Error pengiriman Meta (' . $response->status() . ')');
+            $errorDetail = $errorData['error_data']['details'] ?? ($errorData['error_user_msg'] ?? null);
+            if (!empty($errorDetail)) {
+                $errorMessage .= ' | Detail: ' . $errorDetail;
+            }
             
             Log::error('Meta WhatsApp sendTemplateMessage Failed: ' . json_encode($errorData));
 

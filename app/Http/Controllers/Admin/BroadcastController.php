@@ -951,13 +951,17 @@ class BroadcastController extends Controller
         if ($this->hasTableCached('tb_broadcast_wa_template')) {
             try {
                 $hasHeaderCols = Schema::hasColumn('tb_broadcast_wa_template', 'meta_header_type');
+                $portalDefaultImg = (app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id'))
+                    ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png'
+                    : url('images/portal%20pelanggan.png');
+
                 $updateFields = [
                     'meta_params_map' => json_encode(['nama_pelanggan', 'nomor_internet']),
                     'updated_at'      => now(),
                 ];
                 if ($hasHeaderCols) {
                     $updateFields['meta_header_type'] = 'IMAGE';
-                    $updateFields['meta_header_url'] = 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
+                    $updateFields['meta_header_url'] = $portalDefaultImg;
                 }
 
                 DB::table('tb_broadcast_wa_template')
@@ -966,6 +970,10 @@ class BroadcastController extends Controller
             } catch (\Throwable $ex) {}
         }
 
+        $portalDefaultImg = (app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id'))
+            ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png'
+            : url('images/portal%20pelanggan.png');
+
         $templates = DB::table('tb_broadcast_wa_template')
             ->whereNotNull('meta_template_name')
             ->where('meta_template_name', '!=', '')
@@ -973,7 +981,7 @@ class BroadcastController extends Controller
             ->orderBy('is_default', 'desc')
             ->orderBy('nama_template', 'asc')
             ->get()
-            ->map(function ($t) {
+            ->map(function ($t) use ($portalDefaultImg) {
                 $metaName = $t->meta_template_name ?? '';
                 $isPortal = ($metaName === 'info_portal' || str_contains($metaName, 'portal'));
                 if ($isPortal) {
@@ -981,7 +989,9 @@ class BroadcastController extends Controller
                         $t->meta_params_map = json_encode(['nama_pelanggan', 'nomor_internet']);
                     }
                     $t->meta_header_type = (!empty($t->meta_header_type ?? null)) ? $t->meta_header_type : 'IMAGE';
-                    $t->meta_header_url = (!empty($t->meta_header_url ?? null)) ? $t->meta_header_url : 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
+                    $t->meta_header_url = (!empty($t->meta_header_url ?? null) && !str_contains($t->meta_header_url, 'logo-msn')) 
+                        ? $t->meta_header_url 
+                        : $portalDefaultImg;
                 } else {
                     $t->meta_header_type = $t->meta_header_type ?? null;
                     $t->meta_header_url = $t->meta_header_url ?? null;
@@ -1259,8 +1269,11 @@ class BroadcastController extends Controller
                 $headerType = 'IMAGE';
             }
             if ($headerType === 'IMAGE') {
-                $defaultImg = 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
-                $dbImg = (!empty($tpl->meta_header_url ?? null)) ? $tpl->meta_header_url : $defaultImg;
+                $isPortal = ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal'));
+                $defaultImg = $isPortal
+                    ? ((app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id')) ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png' : url('images/portal%20pelanggan.png'))
+                    : url('assets/images/logo-msn.png');
+                $dbImg = (!empty($tpl->meta_header_url ?? null) && (!$isPortal || !str_contains($tpl->meta_header_url, 'logo-msn'))) ? $tpl->meta_header_url : $defaultImg;
                 $rawHeaderUrl = $request->input('header_image_url') ?: $dbImg;
                 $headerParams = [
                     [
@@ -1391,8 +1404,11 @@ class BroadcastController extends Controller
         }
 
         $headerType = $tpl->meta_header_type ?? ($metaTemplateName === 'info_portal' ? 'IMAGE' : null);
-        $defaultImg = 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
-        $dbImg = (!empty($tpl->meta_header_url ?? null)) ? $tpl->meta_header_url : $defaultImg;
+        $isPortal = ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal'));
+        $defaultImg = $isPortal
+            ? ((app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id')) ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png' : url('images/portal%20pelanggan.png'))
+            : url('assets/images/logo-msn.png');
+        $dbImg = (!empty($tpl->meta_header_url ?? null) && (!$isPortal || !str_contains($tpl->meta_header_url, 'logo-msn'))) ? $tpl->meta_header_url : $defaultImg;
         $headerUrl = $request->input('header_image_url') ?: $dbImg;
 
         foreach ($customerRecords as $cust) {
@@ -1469,11 +1485,16 @@ class BroadcastController extends Controller
             $headerType = 'IMAGE';
         }
         if ($headerType === 'IMAGE') {
+            $isPortal = ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal'));
+            $defaultImg = $isPortal
+                ? ((app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id')) ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png' : url('images/portal%20pelanggan.png'))
+                : url('assets/images/logo-msn.png');
+            $chosenHeaderUrl = (!empty($headerUrl) && (!$isPortal || !str_contains($headerUrl, 'logo-msn'))) ? $headerUrl : $defaultImg;
             $headerParams = [
                 [
                     'type' => 'image',
                     'image' => [
-                        'link' => $headerUrl ?: url('assets/images/logo-msn.png')
+                        'link' => $chosenHeaderUrl
                     ]
                 ]
             ];

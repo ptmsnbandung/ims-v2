@@ -161,7 +161,7 @@
                                     data-meta-lang="{{ $tpl->meta_language ?? 'id' }}"
                                     data-meta-params="{{ addslashes($tpl->meta_params_map ?? '[]') }}"
                                     data-header-type="{{ $tpl->meta_header_type ?? (($tpl->meta_template_name ?? '') === 'info_portal' ? 'IMAGE' : '') }}"
-                                    data-header-url="{{ (!empty($tpl->meta_header_url ?? null)) ? $tpl->meta_header_url : url('assets/images/logo-msn.png') }}"
+                                    data-header-url="{{ (!empty($tpl->meta_header_url ?? null) && !str_contains($tpl->meta_header_url, 'logo-msn')) ? $tpl->meta_header_url : ((($tpl->meta_template_name ?? '') === 'info_portal' || str_contains($tpl->meta_template_name ?? '', 'portal')) ? ((app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id')) ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png' : url('images/portal%20pelanggan.png')) : url('assets/images/logo-msn.png')) }}"
                                     data-kategori="{{ $tpl->kategori }}">
                                 📌 {{ $tpl->nama_template }} ({{ $tpl->meta_template_name }}) {{ $tpl->is_default ? '⭐ [Default]' : '' }}
                             </option>
@@ -201,7 +201,11 @@
                     <input type="text" x-model="headerImageUrl" placeholder="https://domain.com/path-to-image.png" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-mono focus:ring-1 focus:ring-emerald-500">
                     <div class="text-[9.5px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
                         <span>URL gambar publik yang dikirim sebagai banner header WhatsApp resmi.</span>
-                        <button type="button" @click="headerImageUrl = '{{ url('assets/images/logo-msn.png') }}'" class="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Gunakan Logo MSN</button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="headerImageUrl = '{{ (app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id')) ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png' : url('images/portal%20pelanggan.png') }}'" class="text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer font-semibold">Gunakan Banner Portal</button>
+                            <span>&bull;</span>
+                            <button type="button" @click="headerImageUrl = '{{ url('assets/images/logo-msn.png') }}'" class="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Logo MSN</button>
+                        </div>
                     </div>
                 </div>
 
@@ -278,7 +282,7 @@
                             <!-- Header Image Preview -->
                             <template x-if="currentMetaHeaderType === 'IMAGE' && headerImageUrl">
                                 <div class="rounded-lg overflow-hidden border border-slate-200/80 dark:border-slate-700/80 bg-slate-100 dark:bg-slate-800">
-                                    <img :src="headerImageUrl" class="w-full max-h-36 object-contain bg-white dark:bg-slate-900" onerror="this.src='{{ asset('assets/images/logo-msn.png') }}'">
+                                    <img :src="headerImageUrl" class="w-full max-h-48 object-cover bg-white dark:bg-slate-900" onerror="this.src='{{ asset('images/portal%20pelanggan.png') }}'">
                                 </div>
                             </template>
 
@@ -297,7 +301,7 @@
                                     <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                     </svg>
-                                    <span>Bayar Sekarang</span>
+                                    <span x-text="(currentMetaName === 'info_portal' || (currentMetaName && currentMetaName.includes('portal'))) ? 'Portal Pelanggan' : 'Bayar Sekarang'"></span>
                                 </div>
                             </div>
                         </div>
@@ -762,7 +766,7 @@ function broadcastApp() {
         currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'tagihan_bulanan' }}",
         currentMetaLang: "{{ $defaultTemplate->meta_language ?? 'id' }}",
         currentMetaHeaderType: "{{ ($defaultTemplate && (($defaultTemplate->meta_template_name ?? '') === 'info_portal' || str_contains($defaultTemplate->meta_template_name ?? '', 'portal') || ($defaultTemplate->meta_header_type ?? '') === 'IMAGE')) ? 'IMAGE' : ($defaultTemplate->meta_header_type ?? '') }}",
-        headerImageUrl: "{{ ($defaultTemplate && !empty($defaultTemplate->meta_header_url ?? null)) ? $defaultTemplate->meta_header_url : url('assets/images/logo-msn.png') }}",
+        headerImageUrl: "{{ ($defaultTemplate && !empty($defaultTemplate->meta_header_url ?? null) && !str_contains($defaultTemplate->meta_header_url, 'logo-msn')) ? $defaultTemplate->meta_header_url : ((($defaultTemplate->meta_template_name ?? '') === 'info_portal' || str_contains($defaultTemplate->meta_template_name ?? '', 'portal')) ? ((app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id')) ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png' : url('images/portal%20pelanggan.png')) : url('assets/images/logo-msn.png')) }}",
         currentMetaParamsMap: "{{ ($defaultTemplate && (($defaultTemplate->meta_template_name ?? '') === 'info_portal' || str_contains($defaultTemplate->meta_template_name ?? '', 'portal')) && (empty($defaultTemplate->meta_params_map ?? null) || $defaultTemplate->meta_params_map === '[]' || str_contains($defaultTemplate->meta_params_map, 'param_1'))) ? '[\"nama_pelanggan\",\"nomor_internet\"]' : addslashes($defaultTemplate->meta_params_map ?? '[]') }}",
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
         metodeKirim: "{{ $isMetaConfigured ? 'meta_api' : 'wa_web' }}",
@@ -881,8 +885,14 @@ function broadcastApp() {
                 else if (metaName === 'info_portal' || (metaName && metaName.includes('portal'))) this.currentMetaHeaderType = 'IMAGE';
                 else this.currentMetaHeaderType = '';
 
-                if (headerUrl) this.headerImageUrl = headerUrl;
-                else if (this.currentMetaHeaderType === 'IMAGE') this.headerImageUrl = "{{ url('assets/images/logo-msn.png') }}";
+                const defaultPortalImg = "{{ (app()->environment('production') || str_contains(url('/'), 'ims-v2.ptmsn.co.id')) ? 'https://ims-v2.ptmsn.co.id/images/portal%20pelanggan.png' : url('images/portal%20pelanggan.png') }}";
+                if (headerUrl && !headerUrl.includes('logo-msn')) {
+                    this.headerImageUrl = headerUrl;
+                } else if (this.currentMetaHeaderType === 'IMAGE') {
+                    this.headerImageUrl = (metaName === 'info_portal' || (metaName && metaName.includes('portal'))) 
+                        ? defaultPortalImg 
+                        : "{{ url('assets/images/logo-msn.png') }}";
+                }
             }
         },
 

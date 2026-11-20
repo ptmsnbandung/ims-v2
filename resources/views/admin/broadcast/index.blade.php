@@ -160,8 +160,8 @@
                                     data-meta-name="{{ $tpl->meta_template_name ?? 'tagihan_bulanan' }}"
                                     data-meta-lang="{{ $tpl->meta_language ?? 'id' }}"
                                     data-meta-params="{{ addslashes($tpl->meta_params_map ?? '[]') }}"
-                                    data-header-type="{{ $tpl->meta_header_type ?? ($tpl->meta_template_name === 'info_portal' ? 'IMAGE' : '') }}"
-                                    data-header-url="{{ $tpl->meta_header_url ?? url('assets/images/logo-msn.png') }}"
+                                    data-header-type="{{ $tpl->meta_header_type ?? (($tpl->meta_template_name ?? '') === 'info_portal' ? 'IMAGE' : '') }}"
+                                    data-header-url="{{ (!empty($tpl->meta_header_url ?? null)) ? $tpl->meta_header_url : url('assets/images/logo-msn.png') }}"
                                     data-kategori="{{ $tpl->kategori }}">
                                 📌 {{ $tpl->nama_template }} ({{ $tpl->meta_template_name }}) {{ $tpl->is_default ? '⭐ [Default]' : '' }}
                             </option>
@@ -761,9 +761,9 @@ function broadcastApp() {
         selectedTemplateId: "{{ $defaultTemplate->id ?? '' }}",
         currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'tagihan_bulanan' }}",
         currentMetaLang: "{{ $defaultTemplate->meta_language ?? 'id' }}",
-        currentMetaHeaderType: "{{ ($defaultTemplate && ($defaultTemplate->meta_template_name === 'info_portal' || str_contains($defaultTemplate->meta_template_name, 'portal') || ($defaultTemplate->meta_header_type ?? '') === 'IMAGE')) ? 'IMAGE' : ($defaultTemplate->meta_header_type ?? '') }}",
-        headerImageUrl: "{{ ($defaultTemplate && !empty($defaultTemplate->meta_header_url)) ? $defaultTemplate->meta_header_url : url('assets/images/logo-msn.png') }}",
-        currentMetaParamsMap: "{{ ($defaultTemplate && ($defaultTemplate->meta_template_name === 'info_portal' || str_contains($defaultTemplate->meta_template_name, 'portal')) && (empty($defaultTemplate->meta_params_map) || $defaultTemplate->meta_params_map === '[]' || str_contains($defaultTemplate->meta_params_map, 'param_1'))) ? '[\"nama_pelanggan\",\"nomor_internet\"]' : addslashes($defaultTemplate->meta_params_map ?? '[]') }}",
+        currentMetaHeaderType: "{{ ($defaultTemplate && (($defaultTemplate->meta_template_name ?? '') === 'info_portal' || str_contains($defaultTemplate->meta_template_name ?? '', 'portal') || ($defaultTemplate->meta_header_type ?? '') === 'IMAGE')) ? 'IMAGE' : ($defaultTemplate->meta_header_type ?? '') }}",
+        headerImageUrl: "{{ ($defaultTemplate && !empty($defaultTemplate->meta_header_url ?? null)) ? $defaultTemplate->meta_header_url : url('assets/images/logo-msn.png') }}",
+        currentMetaParamsMap: "{{ ($defaultTemplate && (($defaultTemplate->meta_template_name ?? '') === 'info_portal' || str_contains($defaultTemplate->meta_template_name ?? '', 'portal')) && (empty($defaultTemplate->meta_params_map ?? null) || $defaultTemplate->meta_params_map === '[]' || str_contains($defaultTemplate->meta_params_map, 'param_1'))) ? '[\"nama_pelanggan\",\"nomor_internet\"]' : addslashes($defaultTemplate->meta_params_map ?? '[]') }}",
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
         metodeKirim: "{{ $isMetaConfigured ? 'meta_api' : 'wa_web' }}",
         showSingleModal: false,

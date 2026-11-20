@@ -76,7 +76,7 @@ class BroadcastController extends Controller
      */
     protected function ensureSchema(): void
     {
-        if (Cache::has('ims_broadcast_schema_ensured_v4')) {
+        if (Cache::has('ims_broadcast_schema_ensured_v6')) {
             return;
         }
 
@@ -97,12 +97,16 @@ class BroadcastController extends Controller
                     $table->timestamps();
                 });
             } else {
-                if (!Schema::hasColumn('tb_broadcast_wa_template', 'meta_header_type')) {
-                    Schema::table('tb_broadcast_wa_template', function ($table) {
-                        $table->string('meta_header_type', 30)->nullable()->after('meta_language');
-                        $table->text('meta_header_url')->nullable()->after('meta_header_type');
-                    });
-                }
+                try {
+                    if (!Schema::hasColumn('tb_broadcast_wa_template', 'meta_header_type')) {
+                        DB::statement("ALTER TABLE `tb_broadcast_wa_template` ADD COLUMN `meta_header_type` VARCHAR(30) NULL AFTER `meta_language`");
+                    }
+                } catch (\Throwable $e) {}
+                try {
+                    if (!Schema::hasColumn('tb_broadcast_wa_template', 'meta_header_url')) {
+                        DB::statement("ALTER TABLE `tb_broadcast_wa_template` ADD COLUMN `meta_header_url` TEXT NULL AFTER `meta_header_type`");
+                    }
+                } catch (\Throwable $e) {}
             }
 
             if (!Schema::hasTable('tb_broadcast_wa_log')) {
@@ -144,7 +148,7 @@ class BroadcastController extends Controller
                 ]);
             }
 
-            Cache::put('ims_broadcast_schema_ensured_v4', true, 86400);
+            Cache::put('ims_broadcast_schema_ensured_v6', true, 86400);
         } catch (\Exception $e) {
             Log::error('Broadcast WA Schema initialization error: ' . $e->getMessage());
         }
@@ -970,12 +974,17 @@ class BroadcastController extends Controller
             ->orderBy('nama_template', 'asc')
             ->get()
             ->map(function ($t) {
-                if ($t->meta_template_name === 'info_portal' || str_contains($t->meta_template_name, 'portal')) {
-                    if (empty($t->meta_params_map) || $t->meta_params_map === '[]' || str_contains($t->meta_params_map, 'param_1')) {
+                $metaName = $t->meta_template_name ?? '';
+                $isPortal = ($metaName === 'info_portal' || str_contains($metaName, 'portal'));
+                if ($isPortal) {
+                    if (empty($t->meta_params_map ?? null) || $t->meta_params_map === '[]' || str_contains($t->meta_params_map, 'param_1')) {
                         $t->meta_params_map = json_encode(['nama_pelanggan', 'nomor_internet']);
                     }
-                    $t->meta_header_type = $t->meta_header_type ?? 'IMAGE';
-                    $t->meta_header_url = $t->meta_header_url ?: 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
+                    $t->meta_header_type = (!empty($t->meta_header_type ?? null)) ? $t->meta_header_type : 'IMAGE';
+                    $t->meta_header_url = (!empty($t->meta_header_url ?? null)) ? $t->meta_header_url : 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
+                } else {
+                    $t->meta_header_type = $t->meta_header_type ?? null;
+                    $t->meta_header_url = $t->meta_header_url ?? null;
                 }
                 return $t;
             });
@@ -1250,7 +1259,9 @@ class BroadcastController extends Controller
                 $headerType = 'IMAGE';
             }
             if ($headerType === 'IMAGE') {
-                $rawHeaderUrl = $request->input('header_image_url') ?: ($tpl->meta_header_url ?: url('assets/images/logo-msn.png'));
+                $defaultImg = 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
+                $dbImg = (!empty($tpl->meta_header_url ?? null)) ? $tpl->meta_header_url : $defaultImg;
+                $rawHeaderUrl = $request->input('header_image_url') ?: $dbImg;
                 $headerParams = [
                     [
                         'type' => 'image',
@@ -1380,7 +1391,9 @@ class BroadcastController extends Controller
         }
 
         $headerType = $tpl->meta_header_type ?? ($metaTemplateName === 'info_portal' ? 'IMAGE' : null);
-        $headerUrl = $request->input('header_image_url') ?: ($tpl->meta_header_url ?: url('assets/images/logo-msn.png'));
+        $defaultImg = 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
+        $dbImg = (!empty($tpl->meta_header_url ?? null)) ? $tpl->meta_header_url : $defaultImg;
+        $headerUrl = $request->input('header_image_url') ?: $dbImg;
 
         foreach ($customerRecords as $cust) {
             $cleanHp = $this->formatWaPhone($cust->nomor_hp ?? '');

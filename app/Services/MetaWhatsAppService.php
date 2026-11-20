@@ -357,14 +357,29 @@ class MetaWhatsAppService
 
             if (empty($name)) continue;
 
-            // Extract body text & parameters
+            // Extract body text & parameters & header format
             $bodyText = '';
+            $headerType = null;
+            $headerUrl = null;
             if (!empty($tpl['components'])) {
                 foreach ($tpl['components'] as $comp) {
-                    if (($comp['type'] ?? '') === 'BODY') {
+                    $cType = strtoupper($comp['type'] ?? '');
+                    if ($cType === 'BODY') {
                         $bodyText = $comp['text'] ?? '';
+                    } elseif ($cType === 'HEADER') {
+                        $headerType = strtoupper($comp['format'] ?? '');
+                        if (!empty($comp['example']['header_handle'][0])) {
+                            $headerUrl = $comp['example']['header_handle'][0];
+                        } elseif (!empty($comp['example']['header_url'][0])) {
+                            $headerUrl = $comp['example']['header_url'][0];
+                        }
                     }
                 }
+            }
+
+            if ($name === 'info_portal' || str_contains($name, 'portal')) {
+                if (empty($headerType)) $headerType = 'IMAGE';
+                if (empty($headerUrl)) $headerUrl = 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
             }
 
             if (empty($bodyText)) {
@@ -404,23 +419,31 @@ class MetaWhatsAppService
                 ->where('meta_template_name', $name)
                 ->first();
 
+            $hasHeaderCols = \Illuminate\Support\Facades\Schema::hasColumn('tb_broadcast_wa_template', 'meta_header_type');
+
             if ($existing) {
                 $paramsToSave = $defaultParamsMap;
                 if ($name === 'info_portal' || str_contains($name, 'portal')) {
                     $paramsToSave = ['nama_pelanggan', 'nomor_internet'];
                 }
+                $updateData = [
+                    'nama_template'   => $existing->nama_template ?: $humanName,
+                    'meta_language'   => $language,
+                    'meta_params_map' => json_encode($paramsToSave),
+                    'pesan'           => $bodyText,
+                    'kategori'        => $category,
+                    'updated_at'      => now(),
+                ];
+                if ($hasHeaderCols) {
+                    $updateData['meta_header_type'] = $headerType;
+                    $updateData['meta_header_url']  = $headerUrl ?: ($existing->meta_header_url ?? null);
+                }
+
                 \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')
                     ->where('id', $existing->id)
-                    ->update([
-                        'nama_template'   => $existing->nama_template ?: $humanName,
-                        'meta_language'   => $language,
-                        'meta_params_map' => json_encode($paramsToSave),
-                        'pesan'           => $bodyText,
-                        'kategori'        => $category,
-                        'updated_at'      => now(),
-                    ]);
+                    ->update($updateData);
             } else {
-                \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')->insert([
+                $insertData = [
                     'nama_template'      => $humanName . ' (' . strtoupper($language) . ')',
                     'meta_template_name' => $name,
                     'meta_language'      => $language,
@@ -431,7 +454,13 @@ class MetaWhatsAppService
                     'is_default'         => ($name === 'tagihan_bulanan' || $syncedCount === 0 ? 1 : 0),
                     'created_at'         => now(),
                     'updated_at'         => now(),
-                ]);
+                ];
+                if ($hasHeaderCols) {
+                    $insertData['meta_header_type'] = $headerType;
+                    $insertData['meta_header_url']  = $headerUrl;
+                }
+
+                \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')->insert($insertData);
             }
 
             $syncedCount++;

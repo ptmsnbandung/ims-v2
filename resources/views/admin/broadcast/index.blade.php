@@ -160,6 +160,8 @@
                                     data-meta-name="{{ $tpl->meta_template_name ?? 'tagihan_bulanan' }}"
                                     data-meta-lang="{{ $tpl->meta_language ?? 'id' }}"
                                     data-meta-params="{{ addslashes($tpl->meta_params_map ?? '[]') }}"
+                                    data-header-type="{{ $tpl->meta_header_type ?? ($tpl->meta_template_name === 'info_portal' ? 'IMAGE' : '') }}"
+                                    data-header-url="{{ $tpl->meta_header_url ?? url('assets/images/logo-msn.png') }}"
                                     data-kategori="{{ $tpl->kategori }}">
                                 📌 {{ $tpl->nama_template }} ({{ $tpl->meta_template_name }}) {{ $tpl->is_default ? '⭐ [Default]' : '' }}
                             </option>
@@ -183,6 +185,23 @@
                             <svg class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
                             <span>Meta Cloud API Approved</span>
                         </span>
+                    </div>
+                </div>
+
+                <!-- Header Image Configuration for Meta Template -->
+                <div x-show="currentMetaHeaderType === 'IMAGE'" class="bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-1.5 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-800 dark:text-slate-200 font-bold text-[11px] flex items-center gap-1">
+                            <span>📷 Gambar Header Pesan (Wajib Meta):</span>
+                        </span>
+                        <span class="text-[9.5px] text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
+                            Header Image Required
+                        </span>
+                    </div>
+                    <input type="text" x-model="headerImageUrl" placeholder="https://domain.com/path-to-image.png" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-mono focus:ring-1 focus:ring-emerald-500">
+                    <div class="text-[9.5px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                        <span>URL gambar publik yang dikirim sebagai banner header WhatsApp resmi.</span>
+                        <button type="button" @click="headerImageUrl = '{{ url('assets/images/logo-msn.png') }}'" class="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Gunakan Logo MSN</button>
                     </div>
                 </div>
 
@@ -256,6 +275,13 @@
                     <!-- WA Chat Bubble Body -->
                     <div class="p-3 min-h-[140px] max-h-[300px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
                         <div class="bg-white dark:bg-[#1f2c34] text-slate-900 dark:text-slate-100 p-3 rounded-xl rounded-tl-none max-w-[96%] text-[11.5px] shadow-xs leading-relaxed font-sans space-y-2 border border-slate-200/60 dark:border-slate-700/60">
+                            <!-- Header Image Preview -->
+                            <template x-if="currentMetaHeaderType === 'IMAGE' && headerImageUrl">
+                                <div class="rounded-lg overflow-hidden border border-slate-200/80 dark:border-slate-700/80 bg-slate-100 dark:bg-slate-800">
+                                    <img :src="headerImageUrl" class="w-full max-h-36 object-contain bg-white dark:bg-slate-900" onerror="this.src='{{ asset('assets/images/logo-msn.png') }}'">
+                                </div>
+                            </template>
+
                             <!-- Main Text -->
                             <div class="whitespace-pre-wrap leading-relaxed" x-html="formatWaPreview(customPesan)"></div>
                             
@@ -608,6 +634,11 @@
 
                 <div>
                     <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pratinjau Pesan Template:</label>
+                    <template x-if="currentMetaHeaderType === 'IMAGE' && headerImageUrl">
+                        <div class="rounded-lg overflow-hidden border border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 mb-2">
+                            <img :src="headerImageUrl" class="w-full max-h-32 object-contain bg-white dark:bg-slate-900" onerror="this.src='{{ asset('assets/images/logo-msn.png') }}'">
+                        </div>
+                    </template>
                     <div class="bg-[#efeae2] dark:bg-[#0b141a] p-3 rounded-xl border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 whitespace-pre-wrap max-h-40 overflow-y-auto font-sans leading-relaxed text-[11px]" x-text="singleTarget.renderedPesan"></div>
                 </div>
 
@@ -730,6 +761,8 @@ function broadcastApp() {
         selectedTemplateId: "{{ $defaultTemplate->id ?? '' }}",
         currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'tagihan_bulanan' }}",
         currentMetaLang: "{{ $defaultTemplate->meta_language ?? 'id' }}",
+        currentMetaHeaderType: "{{ ($defaultTemplate && ($defaultTemplate->meta_template_name === 'info_portal' || str_contains($defaultTemplate->meta_template_name, 'portal') || ($defaultTemplate->meta_header_type ?? '') === 'IMAGE')) ? 'IMAGE' : ($defaultTemplate->meta_header_type ?? '') }}",
+        headerImageUrl: "{{ ($defaultTemplate && !empty($defaultTemplate->meta_header_url)) ? $defaultTemplate->meta_header_url : url('assets/images/logo-msn.png') }}",
         currentMetaParamsMap: "{{ ($defaultTemplate && ($defaultTemplate->meta_template_name === 'info_portal' || str_contains($defaultTemplate->meta_template_name, 'portal')) && (empty($defaultTemplate->meta_params_map) || $defaultTemplate->meta_params_map === '[]' || str_contains($defaultTemplate->meta_params_map, 'param_1'))) ? '[\"nama_pelanggan\",\"nomor_internet\"]' : addslashes($defaultTemplate->meta_params_map ?? '[]') }}",
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
         metodeKirim: "{{ $isMetaConfigured ? 'meta_api' : 'wa_web' }}",
@@ -831,6 +864,9 @@ function broadcastApp() {
                 const metaName = opt.getAttribute('data-meta-name');
                 const metaLang = opt.getAttribute('data-meta-lang');
                 let metaParams = opt.getAttribute('data-meta-params');
+                const headerType = opt.getAttribute('data-header-type');
+                const headerUrl = opt.getAttribute('data-header-url');
+
                 if (metaName === 'info_portal' || (metaName && metaName.includes('portal'))) {
                     if (!metaParams || metaParams === '[]' || metaParams.includes('param_1')) {
                         metaParams = '["nama_pelanggan","nomor_internet"]';
@@ -840,6 +876,13 @@ function broadcastApp() {
                 if (metaName) this.currentMetaName = metaName;
                 if (metaLang) this.currentMetaLang = metaLang;
                 if (metaParams) this.currentMetaParamsMap = metaParams;
+
+                if (headerType) this.currentMetaHeaderType = headerType;
+                else if (metaName === 'info_portal' || (metaName && metaName.includes('portal'))) this.currentMetaHeaderType = 'IMAGE';
+                else this.currentMetaHeaderType = '';
+
+                if (headerUrl) this.headerImageUrl = headerUrl;
+                else if (this.currentMetaHeaderType === 'IMAGE') this.headerImageUrl = "{{ url('assets/images/logo-msn.png') }}";
             }
         },
 
@@ -981,6 +1024,7 @@ function broadcastApp() {
                     pesan: this.singleTarget.renderedPesan,
                     template_id: this.selectedTemplateId,
                     metode_kirim: this.singleTarget.metode,
+                    header_image_url: this.headerImageUrl,
                     kategori: "jatuh_tempo",
                     bulan: "{{ $selectedBulan }}",
                     tahun: "{{ $selectedTahun }}"
@@ -1027,6 +1071,7 @@ function broadcastApp() {
                     pesan: this.customPesan,
                     template_id: this.selectedTemplateId,
                     metode_kirim: this.metodeKirim,
+                    header_image_url: this.headerImageUrl,
                     kategori: "jatuh_tempo",
                     bulan: "{{ $selectedBulan }}",
                     tahun: "{{ $selectedTahun }}"
@@ -1080,6 +1125,8 @@ function broadcastApp() {
                             pesan: item.pesan,
                             meta_template_name: item.meta_template_name,
                             meta_language: item.meta_language,
+                            meta_header_type: item.meta_header_type,
+                            meta_header_url: item.meta_header_url,
                             meta_parameters: item.meta_parameters,
                             kategori: item.kategori,
                             bulan: item.bulan,

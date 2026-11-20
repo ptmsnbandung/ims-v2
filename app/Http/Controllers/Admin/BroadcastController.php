@@ -87,6 +87,8 @@ class BroadcastController extends Controller
                     $table->string('nama_template', 150);
                     $table->string('meta_template_name', 150)->nullable();
                     $table->string('meta_language', 20)->default('id');
+                    $table->string('meta_header_type', 30)->nullable();
+                    $table->text('meta_header_url')->nullable();
                     $table->text('meta_params_map')->nullable();
                     $table->string('subjek', 255)->nullable();
                     $table->string('kategori', 50)->default('custom');
@@ -94,6 +96,13 @@ class BroadcastController extends Controller
                     $table->tinyInteger('is_default')->default(0);
                     $table->timestamps();
                 });
+            } else {
+                if (!Schema::hasColumn('tb_broadcast_wa_template', 'meta_header_type')) {
+                    Schema::table('tb_broadcast_wa_template', function ($table) {
+                        $table->string('meta_header_type', 30)->nullable()->after('meta_language');
+                        $table->text('meta_header_url')->nullable()->after('meta_header_type');
+                    });
+                }
             }
 
             if (!Schema::hasTable('tb_broadcast_wa_log')) {
@@ -934,21 +943,22 @@ class BroadcastController extends Controller
             }
         }
 
-        // Auto-fix info_portal parameters map if missing or defaulting to param_1
+        // Auto-fix info_portal parameters map and header image if missing
         if ($this->hasTableCached('tb_broadcast_wa_template')) {
             try {
+                $hasHeaderCols = Schema::hasColumn('tb_broadcast_wa_template', 'meta_header_type');
+                $updateFields = [
+                    'meta_params_map' => json_encode(['nama_pelanggan', 'nomor_internet']),
+                    'updated_at'      => now(),
+                ];
+                if ($hasHeaderCols) {
+                    $updateFields['meta_header_type'] = 'IMAGE';
+                    $updateFields['meta_header_url'] = 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
+                }
+
                 DB::table('tb_broadcast_wa_template')
                     ->where('meta_template_name', 'info_portal')
-                    ->where(function ($q) {
-                        $q->whereNull('meta_params_map')
-                          ->orWhere('meta_params_map', '[]')
-                          ->orWhere('meta_params_map', '["param_1","param_2"]')
-                          ->orWhere('meta_params_map', 'like', '%param_1%');
-                    })
-                    ->update([
-                        'meta_params_map' => json_encode(['nama_pelanggan', 'nomor_internet']),
-                        'updated_at'      => now(),
-                    ]);
+                    ->update($updateFields);
             } catch (\Throwable $ex) {}
         }
 
@@ -964,6 +974,8 @@ class BroadcastController extends Controller
                     if (empty($t->meta_params_map) || $t->meta_params_map === '[]' || str_contains($t->meta_params_map, 'param_1')) {
                         $t->meta_params_map = json_encode(['nama_pelanggan', 'nomor_internet']);
                     }
+                    $t->meta_header_type = $t->meta_header_type ?? 'IMAGE';
+                    $t->meta_header_url = $t->meta_header_url ?: 'https://ims-v2.ptmsn.co.id/assets/images/logo-msn.png';
                 }
                 return $t;
             });
@@ -1232,11 +1244,29 @@ class BroadcastController extends Controller
                 ? $this->buildMetaParameters($custData, $paramsMap, $metaTemplateName)
                 : [$request->input('nama_penerima'), (string)$request->input('nomor_internet', '')];
 
+            $headerParams = [];
+            $headerType = $tpl->meta_header_type ?? null;
+            if ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal')) {
+                $headerType = 'IMAGE';
+            }
+            if ($headerType === 'IMAGE') {
+                $rawHeaderUrl = $request->input('header_image_url') ?: ($tpl->meta_header_url ?: url('assets/images/logo-msn.png'));
+                $headerParams = [
+                    [
+                        'type' => 'image',
+                        'image' => [
+                            'link' => $rawHeaderUrl
+                        ]
+                    ]
+                ];
+            }
+
             $apiResult = $this->metaWaService->sendTemplateMessage(
                 to: $cleanHp,
                 templateName: $metaTemplateName,
                 languageCode: $metaLanguage,
-                bodyParameters: $metaParams
+                bodyParameters: $metaParams,
+                headerParameters: $headerParams
             );
 
             if ($apiResult['success']) {
@@ -1349,6 +1379,9 @@ class BroadcastController extends Controller
             $paramsMap = ['nama_pelanggan', 'nomor_internet'];
         }
 
+        $headerType = $tpl->meta_header_type ?? ($metaTemplateName === 'info_portal' ? 'IMAGE' : null);
+        $headerUrl = $request->input('header_image_url') ?: ($tpl->meta_header_url ?: url('assets/images/logo-msn.png'));
+
         foreach ($customerRecords as $cust) {
             $cleanHp = $this->formatWaPhone($cust->nomor_hp ?? '');
             if (empty($cleanHp)) {
@@ -1367,6 +1400,8 @@ class BroadcastController extends Controller
                 'pesan'              => $renderedMessage,
                 'meta_template_name' => $metaTemplateName,
                 'meta_language'      => $tpl->meta_language ?? 'id',
+                'meta_header_type'   => $headerType,
+                'meta_header_url'    => $headerUrl,
                 'meta_parameters'    => $metaParams,
                 'wa_url'             => $waUrl,
                 'kategori'           => $kategori,
@@ -1414,11 +1449,29 @@ class BroadcastController extends Controller
         $metaLanguage = $request->input('meta_language', 'id');
         $metaParams = $request->input('meta_parameters', [$request->input('nama_penerima')]);
 
+        $headerParams = [];
+        $headerType = $request->input('meta_header_type');
+        $headerUrl = $request->input('meta_header_url');
+        if ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal')) {
+            $headerType = 'IMAGE';
+        }
+        if ($headerType === 'IMAGE') {
+            $headerParams = [
+                [
+                    'type' => 'image',
+                    'image' => [
+                        'link' => $headerUrl ?: url('assets/images/logo-msn.png')
+                    ]
+                ]
+            ];
+        }
+
         $apiResult = $this->metaWaService->sendTemplateMessage(
             to: $cleanHp,
             templateName: $metaTemplateName,
             languageCode: $metaLanguage,
-            bodyParameters: $metaParams
+            bodyParameters: $metaParams,
+            headerParameters: $headerParams
         );
 
         $statusKirim = $apiResult['success'] ? 'sent' : 'failed';

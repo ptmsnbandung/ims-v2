@@ -566,9 +566,9 @@ class BroadcastController extends Controller
     /**
      * Render Message Template Placeholders for UI Preview & WA Web
      */
-    public function renderTemplateMessage(string $template, object $data): string
+    public function renderTemplateMessage(string $template, object $data, ?string $metaTemplateName = null, ?array $paramsMap = null): string
     {
-        $nama = $data->nama_pelanggan ?? 'Pelanggan';
+        $nama = $data->nama_pelanggan ?? ($data->nama ?? ($data->nama_p ?? 'Pelanggan'));
         $noInternet = $data->nomor_internet ?? '-';
 
         $bulanNames = [
@@ -617,9 +617,27 @@ class BroadcastController extends Controller
         $paket = $data->nama_kategori_bandwith ?? ($data->nama_bandwith ?? 'Internet Fiber');
         $alamat = $data->alamat_pasang ?? ($data->alamat_p ?? ($data->nama_kota_pasang ?? 'Area IMS'));
 
+        $dict = [
+            'nama'              => $nama,
+            'nama_pelanggan'    => $nama,
+            'nama_p'            => $nama,
+            'nomor_internet'    => $noInternet,
+            'no_internet'       => $noInternet,
+            'periode'           => $periode,
+            'bulan_jatuh_tempo' => $bulanJatuhTempo,
+            'bulan_suspend'     => $bulanSuspend,
+            'nominal'           => $nominal,
+            'jatuh_tempo'       => $jatuhTempo,
+            'link_pembayaran'   => $linkPembayaran,
+            'paket'             => $paket,
+            'alamat'            => $alamat,
+        ];
+
         $replacements = [
             '{nama}'              => $nama,
+            '{nama_pelanggan}'    => $nama,
             '{nomor_internet}'    => $noInternet,
+            '{no_internet}'       => $noInternet,
             '{periode}'           => $periode,
             '{bulan_jatuh_tempo}' => $bulanJatuhTempo,
             '{bulan_suspend}'     => $bulanSuspend,
@@ -628,10 +646,28 @@ class BroadcastController extends Controller
             '{link_pembayaran}'   => $linkPembayaran,
             '{paket}'             => $paket,
             '{alamat}'            => $alamat,
-            '{{1}}'               => $periode,
-            '{{2}}'               => $bulanJatuhTempo,
-            '{{3}}'               => $bulanSuspend,
         ];
+
+        if ($metaTemplateName === 'info_portal' || ($metaTemplateName && str_contains($metaTemplateName, 'portal'))) {
+            $replacements['{{1}}'] = $nama;
+            $replacements['{{2}}'] = $noInternet;
+        } elseif (!empty($paramsMap)) {
+            foreach ($paramsMap as $idx => $key) {
+                $cleanKey = trim(str_replace(['{', '}'], '', $key));
+                $token = '{{' . ($idx + 1) . '}}';
+                if ($cleanKey === 'param_1' || $cleanKey === '1') {
+                    $replacements[$token] = $nama;
+                } elseif ($cleanKey === 'param_2' || $cleanKey === '2') {
+                    $replacements[$token] = $noInternet;
+                } else {
+                    $replacements[$token] = $dict[$cleanKey] ?? ($dict[$key] ?? $token);
+                }
+            }
+        } else {
+            $replacements['{{1}}'] = $periode;
+            $replacements['{{2}}'] = $bulanJatuhTempo;
+            $replacements['{{3}}'] = $bulanSuspend;
+        }
 
         return strtr($template, $replacements);
     }
@@ -639,9 +675,9 @@ class BroadcastController extends Controller
     /**
      * Build Meta Body Parameters (Array for {{1}}, {{2}}, {{3}}, ...)
      */
-    public function buildMetaParameters(object $data, ?array $paramsMap = null): array
+    public function buildMetaParameters(object $data, ?array $paramsMap = null, ?string $metaTemplateName = null): array
     {
-        $nama = $data->nama_pelanggan ?? 'Pelanggan';
+        $nama = $data->nama_pelanggan ?? ($data->nama ?? ($data->nama_p ?? 'Pelanggan'));
         $noInternet = $data->nomor_internet ?? '-';
 
         $bulanNames = [
@@ -691,7 +727,10 @@ class BroadcastController extends Controller
 
         $dict = [
             'nama'              => $nama,
+            'nama_pelanggan'    => $nama,
+            'nama_p'            => $nama,
             'nomor_internet'    => $noInternet,
+            'no_internet'       => $noInternet,
             'periode'           => $periode,
             'bulan_jatuh_tempo' => $bulanJatuhTempo,
             'bulan_suspend'     => $bulanSuspend,
@@ -702,6 +741,11 @@ class BroadcastController extends Controller
             'alamat'            => $alamat,
         ];
 
+        // Specific template override for info_portal: {{1}} => nama, {{2}} => nomor_internet
+        if ($metaTemplateName === 'info_portal' || ($metaTemplateName && str_contains($metaTemplateName, 'portal'))) {
+            return [(string)$nama, (string)$noInternet];
+        }
+
         if (empty($paramsMap)) {
             // Default 3-parameter standard for tagihan_bulanan (periode, bulan_jatuh_tempo, bulan_suspend)
             return [$periode, $bulanJatuhTempo, $bulanSuspend];
@@ -710,7 +754,13 @@ class BroadcastController extends Controller
         $result = [];
         foreach ($paramsMap as $key) {
             $cleanKey = trim(str_replace(['{', '}'], '', $key));
-            $result[] = (string) ($dict[$cleanKey] ?? $cleanKey);
+            if ($cleanKey === 'param_1' || $cleanKey === '1') {
+                $result[] = (string)$nama;
+            } elseif ($cleanKey === 'param_2' || $cleanKey === '2') {
+                $result[] = (string)$noInternet;
+            } else {
+                $result[] = (string) ($dict[$cleanKey] ?? $cleanKey);
+            }
         }
         return $result;
     }
@@ -884,13 +934,39 @@ class BroadcastController extends Controller
             }
         }
 
+        // Auto-fix info_portal parameters map if missing or defaulting to param_1
+        if ($this->hasTableCached('tb_broadcast_wa_template')) {
+            try {
+                DB::table('tb_broadcast_wa_template')
+                    ->where('meta_template_name', 'info_portal')
+                    ->where(function ($q) {
+                        $q->whereNull('meta_params_map')
+                          ->orWhere('meta_params_map', '[]')
+                          ->orWhere('meta_params_map', '["param_1","param_2"]')
+                          ->orWhere('meta_params_map', 'like', '%param_1%');
+                    })
+                    ->update([
+                        'meta_params_map' => json_encode(['nama_pelanggan', 'nomor_internet']),
+                        'updated_at'      => now(),
+                    ]);
+            } catch (\Throwable $ex) {}
+        }
+
         $templates = DB::table('tb_broadcast_wa_template')
             ->whereNotNull('meta_template_name')
             ->where('meta_template_name', '!=', '')
             ->whereNotIn('meta_template_name', ['pengingat_jatuh_tempo_v1', 'pengumuman_maintenance', 'peringatan_isolir_layanan', 'pengumuman_umum'])
             ->orderBy('is_default', 'desc')
             ->orderBy('nama_template', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($t) {
+                if ($t->meta_template_name === 'info_portal' || str_contains($t->meta_template_name, 'portal')) {
+                    if (empty($t->meta_params_map) || $t->meta_params_map === '[]' || str_contains($t->meta_params_map, 'param_1')) {
+                        $t->meta_params_map = json_encode(['nama_pelanggan', 'nomor_internet']);
+                    }
+                }
+                return $t;
+            });
         $defaultTemplate = $templates->where('is_default', 1)->first() ?? $templates->first();
 
         $totalTargetCount = $pelangganList->total();
@@ -1061,15 +1137,20 @@ class BroadcastController extends Controller
             ], 404);
         }
 
-        $renderedMessage = $this->renderTemplateMessage($rawMessage, $data);
-        $cleanHp = $this->formatWaPhone($data->nomor_hp ?? '');
-        $waUrl = !empty($cleanHp) ? 'https://wa.me/' . $cleanHp . '?text=' . urlencode($renderedMessage) : '';
-
         $paramsMap = null;
         if ($templateRecord && !empty($templateRecord->meta_params_map)) {
             $paramsMap = json_decode($templateRecord->meta_params_map, true);
         }
-        $metaParams = $this->buildMetaParameters($data, $paramsMap);
+        $metaTemplateName = $templateRecord->meta_template_name ?? 'tagihan_bulanan';
+        if ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal')) {
+            $paramsMap = ['nama_pelanggan', 'nomor_internet'];
+        }
+
+        $renderedMessage = $this->renderTemplateMessage($rawMessage, $data, $metaTemplateName, $paramsMap);
+        $cleanHp = $this->formatWaPhone($data->nomor_hp ?? '');
+        $waUrl = !empty($cleanHp) ? 'https://wa.me/' . $cleanHp . '?text=' . urlencode($renderedMessage) : '';
+
+        $metaParams = $this->buildMetaParameters($data, $paramsMap, $metaTemplateName);
 
         return response()->json([
             'success'            => true,
@@ -1078,7 +1159,7 @@ class BroadcastController extends Controller
             'nomor_hp'           => $data->nomor_hp ?? '-',
             'clean_hp'           => $cleanHp,
             'rendered_message'   => $renderedMessage,
-            'meta_template_name' => $templateRecord->meta_template_name ?? 'tagihan_bulanan',
+            'meta_template_name' => $metaTemplateName,
             'meta_parameters'    => $metaParams,
             'wa_url'             => $waUrl,
         ]);
@@ -1143,10 +1224,13 @@ class BroadcastController extends Controller
             $metaTemplateName = $tpl->meta_template_name ?? 'tagihan_bulanan';
             $metaLanguage = $tpl->meta_language ?? 'id';
             $paramsMap = ($tpl && !empty($tpl->meta_params_map)) ? json_decode($tpl->meta_params_map, true) : null;
+            if ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal')) {
+                $paramsMap = ['nama_pelanggan', 'nomor_internet'];
+            }
             
             $metaParams = $custData 
-                ? $this->buildMetaParameters($custData, $paramsMap)
-                : [$request->input('nama_penerima')];
+                ? $this->buildMetaParameters($custData, $paramsMap, $metaTemplateName)
+                : [$request->input('nama_penerima'), (string)$request->input('nomor_internet', '')];
 
             $apiResult = $this->metaWaService->sendTemplateMessage(
                 to: $cleanHp,
@@ -1260,6 +1344,10 @@ class BroadcastController extends Controller
 
         $dispatchQueue = [];
         $paramsMap = ($tpl && !empty($tpl->meta_params_map)) ? json_decode($tpl->meta_params_map, true) : null;
+        $metaTemplateName = $tpl->meta_template_name ?? 'tagihan_bulanan';
+        if ($metaTemplateName === 'info_portal' || str_contains($metaTemplateName, 'portal')) {
+            $paramsMap = ['nama_pelanggan', 'nomor_internet'];
+        }
 
         foreach ($customerRecords as $cust) {
             $cleanHp = $this->formatWaPhone($cust->nomor_hp ?? '');
@@ -1267,9 +1355,9 @@ class BroadcastController extends Controller
                 continue;
             }
 
-            $renderedMessage = $this->renderTemplateMessage($rawMessage, $cust);
+            $renderedMessage = $this->renderTemplateMessage($rawMessage, $cust, $metaTemplateName, $paramsMap);
             $waUrl = 'https://wa.me/' . $cleanHp . '?text=' . urlencode($renderedMessage);
-            $metaParams = $this->buildMetaParameters($cust, $paramsMap);
+            $metaParams = $this->buildMetaParameters($cust, $paramsMap, $metaTemplateName);
 
             $dispatchQueue[] = [
                 'kode_broadcast'     => $kodeBatch,
@@ -1277,7 +1365,7 @@ class BroadcastController extends Controller
                 'nama_penerima'      => $cust->nama_pelanggan ?? 'Pelanggan',
                 'nomor_hp'           => $cleanHp,
                 'pesan'              => $renderedMessage,
-                'meta_template_name' => $tpl->meta_template_name ?? 'tagihan_bulanan',
+                'meta_template_name' => $metaTemplateName,
                 'meta_language'      => $tpl->meta_language ?? 'id',
                 'meta_parameters'    => $metaParams,
                 'wa_url'             => $waUrl,

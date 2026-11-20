@@ -376,6 +376,8 @@ class MetaWhatsAppService
             $defaultParamsMap = [];
             if ($name === 'tagihan_bulanan') {
                 $defaultParamsMap = ['periode', 'bulan_jatuh_tempo', 'bulan_suspend'];
+            } elseif ($name === 'info_portal' || str_contains($name, 'portal')) {
+                $defaultParamsMap = ['nama_pelanggan', 'nomor_internet'];
             } elseif (str_contains($name, 'tagihan') || str_contains($name, 'invoice')) {
                 $defaultParamsMap = ['periode', 'bulan_jatuh_tempo', 'bulan_suspend', 'nominal', 'nomor_internet'];
             } elseif (str_contains($name, 'report') || str_contains($name, 'work')) {
@@ -397,12 +399,16 @@ class MetaWhatsAppService
                 ->first();
 
             if ($existing) {
+                $paramsToSave = $defaultParamsMap;
+                if ($name === 'info_portal' || str_contains($name, 'portal')) {
+                    $paramsToSave = ['nama_pelanggan', 'nomor_internet'];
+                }
                 \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')
                     ->where('id', $existing->id)
                     ->update([
                         'nama_template'   => $existing->nama_template ?: $humanName,
                         'meta_language'   => $language,
-                        'meta_params_map' => json_encode($defaultParamsMap),
+                        'meta_params_map' => json_encode($paramsToSave),
                         'pesan'           => $bodyText,
                         'kategori'        => $category,
                         'updated_at'      => now(),

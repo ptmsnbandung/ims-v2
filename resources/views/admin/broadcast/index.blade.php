@@ -730,7 +730,7 @@ function broadcastApp() {
         selectedTemplateId: "{{ $defaultTemplate->id ?? '' }}",
         currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'tagihan_bulanan' }}",
         currentMetaLang: "{{ $defaultTemplate->meta_language ?? 'id' }}",
-        currentMetaParamsMap: "{{ addslashes($defaultTemplate->meta_params_map ?? '[]') }}",
+        currentMetaParamsMap: "{{ ($defaultTemplate && ($defaultTemplate->meta_template_name === 'info_portal' || str_contains($defaultTemplate->meta_template_name, 'portal')) && (empty($defaultTemplate->meta_params_map) || $defaultTemplate->meta_params_map === '[]' || str_contains($defaultTemplate->meta_params_map, 'param_1'))) ? '[\"nama_pelanggan\",\"nomor_internet\"]' : addslashes($defaultTemplate->meta_params_map ?? '[]') }}",
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
         metodeKirim: "{{ $isMetaConfigured ? 'meta_api' : 'wa_web' }}",
         showSingleModal: false,
@@ -753,12 +753,14 @@ function broadcastApp() {
         get currentParamCards() {
             try {
                 let params = JSON.parse(this.currentMetaParamsMap || '[]');
-                if (!Array.isArray(params) || params.length === 0) {
-                    if (this.currentMetaName === 'tagihan_bulanan') {
+                if (!Array.isArray(params) || params.length === 0 || (params.length === 2 && params[0] === 'param_1') || this.currentMetaName === 'info_portal' || (this.currentMetaName && this.currentMetaName.includes('portal'))) {
+                    if (this.currentMetaName === 'info_portal' || (this.currentMetaName && this.currentMetaName.includes('portal'))) {
+                        params = ['nama_pelanggan', 'nomor_internet'];
+                    } else if (this.currentMetaName === 'tagihan_bulanan') {
                         params = ['periode', 'bulan_jatuh_tempo', 'bulan_suspend'];
                     } else if (this.currentMetaName === 'work_report') {
                         params = ['nama', 'nomor_internet', 'alamat', 'paket'];
-                    } else {
+                    } else if (!Array.isArray(params) || params.length === 0) {
                         params = [];
                     }
                 }
@@ -766,8 +768,10 @@ function broadcastApp() {
                     'periode': { label: 'Periode Tagihan', desc: 'Bulan & tahun tagihan (contoh: Oktober 2026)' },
                     'bulan_jatuh_tempo': { label: 'Bulan Jatuh Tempo', desc: 'Menjadi: 20 Oktober 2026' },
                     'bulan_suspend': { label: 'Bulan Suspend', desc: 'Menjadi: 24 Oktober 2026' },
-                    'nama': { label: 'Nama Pelanggan', desc: 'Diambil dari data pelanggan' },
-                    'nomor_internet': { label: 'Nomor Internet / ID', desc: 'Nomor internet pelanggan' },
+                    'nama': { label: 'Nama Pelanggan', desc: 'Diambil dari data nama pelanggan' },
+                    'nama_pelanggan': { label: 'Nama Pelanggan', desc: 'Nama resmi pelanggan terdaftar' },
+                    'nomor_internet': { label: 'Nomor Internet / ID', desc: 'Nomor internet/ID pelanggan' },
+                    'no_internet': { label: 'Nomor Internet / ID', desc: 'Nomor internet/ID pelanggan' },
                     'alamat': { label: 'Alamat Pasang', desc: 'Alamat domisili/pemasangan' },
                     'paket': { label: 'Paket Layanan', desc: 'Nama kategori bandwith' },
                     'nominal': { label: 'Nominal Tagihan', desc: 'Total tagihan layanan (Rp)' },
@@ -777,7 +781,16 @@ function broadcastApp() {
                 return params.map((p, idx) => {
                     const cleanP = String(p).replace(/[{}]/g, '').trim();
                     const paramNum = '{' + '{' + (idx + 1) + '}' + '}';
-                    const meta = dictLabels[cleanP] || { label: cleanP, desc: 'Parameter ' + paramNum };
+                    let meta = dictLabels[cleanP];
+                    if (!meta) {
+                        if (cleanP === 'param_1' || (idx === 0 && (this.currentMetaName === 'info_portal' || (this.currentMetaName && this.currentMetaName.includes('portal'))))) {
+                            meta = { label: 'Nama Pelanggan', desc: 'Nama resmi pelanggan terdaftar' };
+                        } else if (cleanP === 'param_2' || (idx === 1 && (this.currentMetaName === 'info_portal' || (this.currentMetaName && this.currentMetaName.includes('portal'))))) {
+                            meta = { label: 'Nomor Internet / ID', desc: 'Nomor internet/ID pelanggan' };
+                        } else {
+                            meta = { label: cleanP, desc: 'Parameter ' + paramNum };
+                        }
+                    }
                     return {
                         num: paramNum,
                         label: meta.label,
@@ -817,7 +830,12 @@ function broadcastApp() {
                 const rawPesan = opt.getAttribute('data-pesan');
                 const metaName = opt.getAttribute('data-meta-name');
                 const metaLang = opt.getAttribute('data-meta-lang');
-                const metaParams = opt.getAttribute('data-meta-params');
+                let metaParams = opt.getAttribute('data-meta-params');
+                if (metaName === 'info_portal' || (metaName && metaName.includes('portal'))) {
+                    if (!metaParams || metaParams === '[]' || metaParams.includes('param_1')) {
+                        metaParams = '["nama_pelanggan","nomor_internet"]';
+                    }
+                }
                 if (rawPesan) this.customPesan = rawPesan;
                 if (metaName) this.currentMetaName = metaName;
                 if (metaLang) this.currentMetaLang = metaLang;
@@ -835,6 +853,38 @@ function broadcastApp() {
                 .replace(/_(.*?)_/g, '<em>$1</em>')
                 .replace(/~(.*?)~/g, '<del>$1</del>')
                 .replace(/\n/g, '<br>');
+
+            // Highlight mapped parameters in preview
+            if (this.currentMetaName === 'info_portal' || (this.currentMetaName && this.currentMetaName.includes('portal'))) {
+                formatted = formatted
+                    .replace(/\{\{1\}\}/g, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">Dede Sunaryat</span>')
+                    .replace(/\{\{2\}\}/g, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">260831088</span>');
+            } else if (this.currentMetaName === 'tagihan_bulanan') {
+                formatted = formatted
+                    .replace(/\{\{1\}\}/g, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">Oktober 2026</span>')
+                    .replace(/\{\{2\}\}/g, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">20 Oktober 2026</span>')
+                    .replace(/\{\{3\}\}/g, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">24 Oktober 2026</span>');
+            } else {
+                this.currentParamCards.forEach((c, i) => {
+                    const rgx = new RegExp('\\{\\{' + (i + 1) + '\\}\\}', 'g');
+                    formatted = formatted.replace(rgx, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">[' + c.label + ']</span>');
+                });
+            }
+
+            // Also replace standard template placeholders if used
+            formatted = formatted
+                .replace(/\{nama\}/gi, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">Dede Sunaryat</span>')
+                .replace(/\{nama_pelanggan\}/gi, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">Dede Sunaryat</span>')
+                .replace(/\{nomor_internet\}/gi, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">260831088</span>')
+                .replace(/\{no_internet\}/gi, '<span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded font-mono">260831088</span>')
+                .replace(/\{periode\}/gi, 'Oktober 2026')
+                .replace(/\{bulan_jatuh_tempo\}/gi, 'Oktober 2026')
+                .replace(/\{bulan_suspend\}/gi, 'Oktober 2026')
+                .replace(/\{nominal\}/gi, 'Rp 125.000')
+                .replace(/\{jatuh_tempo\}/gi, '20 Oktober 2026')
+                .replace(/\{paket\}/gi, 'BASIC 15 Mbps')
+                .replace(/\{alamat\}/gi, 'KP BABAKAN CIBOLANG RT 03 RW 19');
+
             return formatted;
         },
 

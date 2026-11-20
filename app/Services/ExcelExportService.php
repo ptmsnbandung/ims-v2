@@ -8,7 +8,7 @@ use ZipArchive;
 class ExcelExportService
 {
     /**
-     * Generate native .xlsx (OpenXML) file with professional formatting without external dependencies.
+     * Generate native .xlsx (OpenXML) file with standard editable worksheet structure.
      *
      * @param string $title
      * @param string $subtitle
@@ -32,7 +32,7 @@ class ExcelExportService
     }
 
     /**
-     * Generate multi-sheet native .xlsx (OpenXML) file without external dependencies.
+     * Generate multi-sheet native .xlsx (OpenXML) file compliant with ECMA-376.
      *
      * @param array $sheets Array of ['name' => string, 'title' => string, 'subtitle' => string, 'stats' => ?string, 'callback' => callable]
      * @param array $headers
@@ -49,16 +49,31 @@ class ExcelExportService
         $colsXml = '';
         if (!empty($widths)) {
             $colsXml .= '<cols>';
-            $colIdx = 1;
-            foreach ($widths as $w) {
-                $colsXml .= '<col min="' . $colIdx . '" max="' . $colIdx . '" width="' . $w . '" customWidth="1"/>';
-                $colIdx++;
+            foreach (array_values($widths) as $i => $w) {
+                $colNum = $i + 1;
+                $colsXml .= '<col min="' . $colNum . '" max="' . $colNum . '" width="' . $w . '" customWidth="1"/>';
             }
             $colsXml .= '</cols>';
         }
 
         $tmpSheets = [];
+        $tmpBodies = [];
         $usedNames = [];
+        $sharedStringsMap = [];
+        $sharedStringsList = [];
+        $sharedStringRefs = 0;
+
+        $internString = function (string $text) use (&$sharedStringsMap, &$sharedStringsList, &$sharedStringRefs): int {
+            $clean = self::cleanXmlString($text);
+            $sharedStringRefs++;
+            if (isset($sharedStringsMap[$clean])) {
+                return $sharedStringsMap[$clean];
+            }
+            $idx = count($sharedStringsList);
+            $sharedStringsMap[$clean] = $idx;
+            $sharedStringsList[] = $clean;
+            return $idx;
+        };
 
         try {
             foreach ($sheets as $idx => $sheet) {
@@ -69,78 +84,115 @@ class ExcelExportService
                 $statsLine = trim((string)($sheet['stats'] ?? ''));
                 $chunkCallback = $sheet['callback'];
 
+                $tmpBody = tempnam(sys_get_temp_dir(), 'xlsx_body_');
                 $tmpSheet = tempnam(sys_get_temp_dir(), 'xlsx_sheet_');
-                $fh = fopen($tmpSheet, 'w');
-                if (!$fh) {
+                if ($tmpBody === false || $tmpSheet === false) {
                     throw new Exception("Gagal membuat temporary worksheet file.");
                 }
+                $tmpBodies[] = $tmpBody;
 
-                fwrite($fh, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n");
-                fwrite($fh, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' . "\n");
-                $tabSelected = ($sheetNum === 1) ? ' tabSelected="1"' : '';
-                fwrite($fh, '  <sheetViews><sheetView' . $tabSelected . ' workbookViewId="0"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' . "\n");
-                fwrite($fh, '  ' . $colsXml . "\n");
-                fwrite($fh, '  <sheetData>' . "\n");
+                $bfh = fopen($tmpBody, 'w');
+                if (!$bfh) {
+                    throw new Exception("Gagal membuka temporary worksheet stream.");
+                }
 
+                $maxColCount = max(1, count($headers));
                 $rIdx = 1;
-                fwrite($fh, '<row r="' . $rIdx . '" ht="26" customHeight="1"><c r="A' . $rIdx . '" s="1" t="inlineStr"><is><t>' . htmlspecialchars($title, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
+
+                fwrite($bfh, '<row r="' . $rIdx . '" ht="26" customHeight="1"><c r="A' . $rIdx . '" s="1" t="s"><v>' . $internString($title) . '</v></c></row>' . "\n");
                 $rIdx++;
 
-                fwrite($fh, '<row r="' . $rIdx . '" ht="18" customHeight="1"><c r="A' . $rIdx . '" s="2" t="inlineStr"><is><t>' . htmlspecialchars($subtitle, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
+                fwrite($bfh, '<row r="' . $rIdx . '" ht="18" customHeight="1"><c r="A' . $rIdx . '" s="2" t="s"><v>' . $internString($subtitle) . '</v></c></row>' . "\n");
                 $rIdx++;
 
                 if ($statsLine !== '') {
-                    fwrite($fh, '<row r="' . $rIdx . '" ht="22" customHeight="1"><c r="A' . $rIdx . '" s="11" t="inlineStr"><is><t>' . htmlspecialchars($statsLine, ENT_XML1, 'UTF-8') . '</t></is></c></row>' . "\n");
+                    fwrite($bfh, '<row r="' . $rIdx . '" ht="22" customHeight="1"><c r="A' . $rIdx . '" s="11" t="s"><v>' . $internString($statsLine) . '</v></c></row>' . "\n");
                 } else {
-                    fwrite($fh, '<row r="' . $rIdx . '" ht="8" customHeight="1"></row>' . "\n");
+                    fwrite($bfh, '<row r="' . $rIdx . '" ht="8" customHeight="1"/>' . "\n");
                 }
                 $rIdx++;
 
-                fwrite($fh, '<row r="' . $rIdx . '" ht="28" customHeight="1">');
-                $cIdx = 0;
-                foreach ($headers as $h) {
+                fwrite($bfh, '<row r="' . $rIdx . '" ht="28" customHeight="1">');
+                foreach (array_values($headers) as $cIdx => $h) {
                     $colLetter = self::colLetter($cIdx);
-                    fwrite($fh, '<c r="' . $colLetter . $rIdx . '" s="3" t="inlineStr"><is><t>' . htmlspecialchars($h, ENT_XML1, 'UTF-8') . '</t></is></c>');
-                    $cIdx++;
+                    fwrite($bfh, '<c r="' . $colLetter . $rIdx . '" s="3" t="s"><v>' . $internString((string)$h) . '</v></c>');
                 }
-                fwrite($fh, '</row>' . "\n");
+                fwrite($bfh, '</row>' . "\n");
                 $rIdx++;
 
                 $rowNum = 0;
-                $chunkCallback(function (array $row) use ($fh, &$rIdx, &$rowNum) {
+                $chunkCallback(function (array $row) use ($bfh, &$rIdx, &$rowNum, &$maxColCount, $internString) {
                     $isZebra = ($rowNum % 2 === 1);
-                    fwrite($fh, '<row r="' . $rIdx . '" ht="22" customHeight="1">');
+                    fwrite($bfh, '<row r="' . $rIdx . '" ht="22" customHeight="1">');
                     $cIdx = 0;
                     foreach ($row as $cell) {
-                        $colLetter = ExcelExportService::colLetter($cIdx);
-                        $val = is_null($cell) ? '' : (string)$cell;
-
-                        // Alignment determination: Numbers, IDs, Dates, Status to Center
-                        $isCenter = in_array($cIdx, [0, 1, 3, 4, 5, 8, 9, 10, 13, 17, 19, 20]);
+                        $colLetter = self::colLetter($cIdx);
+                        $isCenter = in_array($cIdx, [0, 1, 3, 4, 5, 8, 9, 10, 13, 17, 19, 20], true);
                         $style = $isZebra ? ($isCenter ? 7 : 6) : ($isCenter ? 5 : 4);
 
-                        // Status Column (Index 17): Badge Styling
+                        $valStr = is_null($cell) ? '' : (string)$cell;
                         if ($cIdx === 17) {
-                            if (stripos($val, 'Aktif') !== false || stripos($val, 'Berlangganan') !== false) {
-                                $style = 8; // Emerald badge
-                            } elseif (stripos($val, 'Isolir') !== false || stripos($val, 'Suspend') !== false) {
-                                $style = 9; // Rose badge
-                            } elseif (stripos($val, 'Pending') !== false || stripos($val, 'Survey') !== false || stripos($val, 'Instalasi') !== false) {
-                                $style = 10; // Amber badge
+                            if (stripos($valStr, 'Aktif') !== false || stripos($valStr, 'Berlangganan') !== false) {
+                                $style = 8;
+                            } elseif (stripos($valStr, 'Isolir') !== false || stripos($valStr, 'Suspend') !== false) {
+                                $style = 9;
+                            } elseif (stripos($valStr, 'Pending') !== false || stripos($valStr, 'Survey') !== false || stripos($valStr, 'Instalasi') !== false) {
+                                $style = 10;
                             }
                         }
 
-                        fwrite($fh, '<c r="' . $colLetter . $rIdx . '" s="' . $style . '" t="inlineStr"><is><t>' . htmlspecialchars($val, ENT_XML1, 'UTF-8') . '</t></is></c>');
+                        $isNumericCell = is_int($cell) || is_float($cell) || ($cIdx === 0 && is_numeric($cell));
+                        if ($valStr === '') {
+                            fwrite($bfh, '<c r="' . $colLetter . $rIdx . '" s="' . $style . '"/>');
+                        } elseif ($isNumericCell) {
+                            fwrite($bfh, '<c r="' . $colLetter . $rIdx . '" s="' . $style . '"><v>' . $valStr . '</v></c>');
+                        } else {
+                            fwrite($bfh, '<c r="' . $colLetter . $rIdx . '" s="' . $style . '" t="s"><v>' . $internString($valStr) . '</v></c>');
+                        }
                         $cIdx++;
                     }
-                    fwrite($fh, '</row>' . "\n");
+                    if ($cIdx > $maxColCount) {
+                        $maxColCount = $cIdx;
+                    }
+                    fwrite($bfh, '</row>' . "\n");
                     $rIdx++;
                     $rowNum++;
                 });
 
+                fclose($bfh);
+
+                $lastRow = max(1, $rIdx - 1);
+                $lastColLetter = self::colLetter(max(0, $maxColCount - 1));
+                $tabSelected = ($sheetNum === 1) ? ' tabSelected="1"' : '';
+
+                $fh = fopen($tmpSheet, 'w');
+                $brh = fopen($tmpBody, 'r');
+                if (!$fh || !$brh) {
+                    if ($fh) {
+                        fclose($fh);
+                    }
+                    if ($brh) {
+                        fclose($brh);
+                    }
+                    throw new Exception("Gagal merangkai worksheet file.");
+                }
+
+                fwrite($fh, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n");
+                fwrite($fh, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' . "\n");
+                fwrite($fh, '  <dimension ref="A1:' . $lastColLetter . $lastRow . '"/>' . "\n");
+                fwrite($fh, '  <sheetViews><sheetView' . $tabSelected . ' workbookViewId="0"><selection activeCell="A1" sqref="A1"/></sheetView></sheetViews>' . "\n");
+                fwrite($fh, '  <sheetFormatPr defaultRowHeight="20"/>' . "\n");
+                if ($colsXml !== '') {
+                    fwrite($fh, '  ' . $colsXml . "\n");
+                }
+                fwrite($fh, '  <sheetData>' . "\n");
+                stream_copy_to_stream($brh, $fh);
                 fwrite($fh, '  </sheetData>' . "\n");
                 fwrite($fh, '</worksheet>');
+
+                fclose($brh);
                 fclose($fh);
+                @unlink($tmpBody);
 
                 $tmpSheets[] = [
                     'num' => $sheetNum,
@@ -149,14 +201,15 @@ class ExcelExportService
                 ];
             }
 
-            // Package into valid OpenXML .xlsx ZIP container
-            $tmpZip = tempnam(sys_get_temp_dir(), 'xlsx_zip_') . '.xlsx';
+            $tmpZipBase = tempnam(sys_get_temp_dir(), 'xlsx_zip_');
+            $tmpZip = $tmpZipBase . '.xlsx';
+            @unlink($tmpZipBase);
+
             $zip = new ZipArchive();
             if ($zip->open($tmpZip, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
                 throw new Exception("Gagal membuat arsip XLSX.");
             }
 
-            // 1. [Content_Types].xml
             $sheetOverrides = '';
             $workbookRels = '';
             $workbookSheets = '';
@@ -164,9 +217,10 @@ class ExcelExportService
                 $n = $s['num'];
                 $sheetOverrides .= "\n" . '  <Override PartName="/xl/worksheets/sheet' . $n . '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
                 $workbookRels .= "\n" . '  <Relationship Id="rId' . $n . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' . $n . '.xml"/>';
-                $workbookSheets .= "\n" . '    <sheet name="' . htmlspecialchars($s['name'], ENT_XML1, 'UTF-8') . '" sheetId="' . $n . '" r:id="rId' . $n . '"/>';
+                $workbookSheets .= "\n" . '    <sheet name="' . htmlspecialchars($s['name'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" sheetId="' . $n . '" r:id="rId' . $n . '"/>';
             }
             $stylesRelId = count($tmpSheets) + 1;
+            $sharedStringsRelId = count($tmpSheets) + 2;
 
             $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -174,105 +228,75 @@ class ExcelExportService
   <Default Extension="xml" ContentType="application/xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' . $sheetOverrides . '
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
 </Types>');
 
-            // 2. _rels/.rels
             $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
 </Relationships>');
 
-            // 3. xl/_rels/workbook.xml.rels
+            $nowIso = gmdate('Y-m-d\TH:i:s\Z');
+            $zip->addFromString('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:creator>IMS</dc:creator>
+  <cp:lastModifiedBy>IMS</cp:lastModifiedBy>
+  <dcterms:created xsi:type="dcterms:W3CDTF">' . $nowIso . '</dcterms:created>
+  <dcterms:modified xsi:type="dcterms:W3CDTF">' . $nowIso . '</dcterms:modified>
+</cp:coreProperties>');
+
+            $zip->addFromString('docProps/app.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <Application>Microsoft Excel</Application>
+  <DocSecurity>0</DocSecurity>
+  <ScaleCrop>false</ScaleCrop>
+  <LinksUpToDate>false</LinksUpToDate>
+  <SharedDoc>false</SharedDoc>
+  <HyperlinksChanged>false</HyperlinksChanged>
+  <AppVersion>16.0300</AppVersion>
+</Properties>');
+
             $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' . $workbookRels . '
   <Relationship Id="rId' . $stylesRelId . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId' . $sharedStringsRelId . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
 </Relationships>');
 
-            // 4. xl/workbook.xml
             $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <bookViews>
+    <workbookView xWindow="0" yWindow="0" windowWidth="24000" windowHeight="15000" activeTab="0"/>
+  </bookViews>
   <sheets>' . $workbookSheets . '
   </sheets>
 </workbook>');
 
-            // 5. xl/styles.xml
-            $zip->addFromString('xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <fonts count="8">
-    <!-- 0: Default Data Font -->
-    <font><sz val="10"/><name val="Segoe UI"/><color rgb="FF334155"/></font>
-    <!-- 1: Title Font -->
-    <font><b/><sz val="14"/><name val="Segoe UI"/><color rgb="FF0F172A"/></font>
-    <!-- 2: Subtitle Font -->
-    <font><sz val="9.5"/><name val="Segoe UI"/><color rgb="FF64748B"/></font>
-    <!-- 3: Table Header Font -->
-    <font><b/><sz val="10"/><name val="Segoe UI"/><color rgb="FFFFFFFF"/></font>
-    <!-- 4: Status Active Font -->
-    <font><b/><sz val="9.5"/><name val="Segoe UI"/><color rgb="FF166534"/></font>
-    <!-- 5: Status Suspend Font -->
-    <font><b/><sz val="9.5"/><name val="Segoe UI"/><color rgb="FF991B1B"/></font>
-    <!-- 6: Status Pending Font -->
-    <font><b/><sz val="9.5"/><name val="Segoe UI"/><color rgb="FF854D0E"/></font>
-    <!-- 7: Stats Summary Font -->
-    <font><b/><sz val="10.5"/><name val="Segoe UI"/><color rgb="FF047857"/></font>
-  </fonts>
-  <fills count="7">
-    <fill><patternFill patternType="none"/></fill>
-    <fill><patternFill patternType="gray125"/></fill>
-    <!-- 2: Table Header Fill (Corporate Dark Slate) -->
-    <fill><patternFill patternType="solid"><fgColor rgb="FF1E293B"/></patternFill></fill>
-    <!-- 3: Zebra Alternate Light Fill -->
-    <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFC"/></patternFill></fill>
-    <!-- 4: Status Active Fill (Soft Emerald) -->
-    <fill><patternFill patternType="solid"><fgColor rgb="FFDCFCE7"/></patternFill></fill>
-    <!-- 5: Status Suspend Fill (Soft Rose) -->
-    <fill><patternFill patternType="solid"><fgColor rgb="FFFEE2E2"/></patternFill></fill>
-    <!-- 6: Status Pending Fill (Soft Amber) -->
-    <fill><patternFill patternType="solid"><fgColor rgb="FFFEF3C7"/></patternFill></fill>
-  </fills>
-  <borders count="2">
-    <!-- 0: None -->
-    <border><left/><right/><top/><bottom/><diagonal/></border>
-    <!-- 1: Thin Border -->
-    <border>
-      <left style="thin"><color rgb="FFE2E8F0"/></left>
-      <right style="thin"><color rgb="FFE2E8F0"/></right>
-      <top style="thin"><color rgb="FFE2E8F0"/></top>
-      <bottom style="thin"><color rgb="FFE2E8F0"/></bottom>
-    </border>
-  </borders>
-  <cellStyleXfs count="1">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
-  </cellStyleXfs>
-  <cellXfs count="12">
-    <!-- 0: Default -->
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-    <!-- 1: Title -->
-    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
-    <!-- 2: Subtitle -->
-    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
-    <!-- 3: Table Header -->
-    <xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-    <!-- 4: Data Left Normal -->
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="left" vertical="center"/></xf>
-    <!-- 5: Data Center Normal -->
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="center" vertical="center"/></xf>
-    <!-- 6: Data Left Zebra -->
-    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1"><alignment horizontal="left" vertical="center"/></xf>
-    <!-- 7: Data Center Zebra -->
-    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center"/></xf>
-    <!-- 8: Status Active Badge -->
-    <xf numFmtId="0" fontId="4" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center"/></xf>
-    <!-- 9: Status Suspend Badge -->
-    <xf numFmtId="0" fontId="5" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center"/></xf>
-    <!-- 10: Status Pending Badge -->
-    <xf numFmtId="0" fontId="6" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center"/></xf>
-    <!-- 11: Stats Summary Row -->
-    <xf numFmtId="0" fontId="7" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
-  </cellXfs>
-</styleSheet>');
+            $zip->addFromString('xl/styles.xml', self::buildStylesXml());
 
-            // 6. xl/worksheets/sheet{1..N}.xml
+            $tmpSst = tempnam(sys_get_temp_dir(), 'xlsx_sst_');
+            if ($tmpSst === false) {
+                throw new Exception("Gagal membuat temporary sharedStrings file.");
+            }
+            $tmpBodies[] = $tmpSst;
+            $sfh = fopen($tmpSst, 'w');
+            if (!$sfh) {
+                throw new Exception("Gagal membuka temporary sharedStrings stream.");
+            }
+            fwrite($sfh, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n");
+            fwrite($sfh, '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' . $sharedStringRefs . '" uniqueCount="' . count($sharedStringsList) . '">' . "\n");
+            foreach ($sharedStringsList as $str) {
+                $escaped = htmlspecialchars($str, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+                $preserve = preg_match('/^\s|\s$/u', $str) ? ' xml:space="preserve"' : '';
+                fwrite($sfh, '  <si><t' . $preserve . '>' . $escaped . '</t></si>' . "\n");
+            }
+            fwrite($sfh, '</sst>');
+            fclose($sfh);
+            $zip->addFile($tmpSst, 'xl/sharedStrings.xml');
+
             foreach ($tmpSheets as $s) {
                 $zip->addFile($s['file'], 'xl/worksheets/sheet' . $s['num'] . '.xml');
             }
@@ -283,7 +307,86 @@ class ExcelExportService
             foreach ($tmpSheets as $s) {
                 @unlink($s['file']);
             }
+            foreach ($tmpBodies as $b) {
+                @unlink($b);
+            }
         }
+    }
+
+    /**
+     * Build OOXML stylesheet with integer font sizes, proper element order, and complete style tables.
+     */
+    protected static function buildStylesXml(): string
+    {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="8">
+    <font><sz val="10"/><color rgb="FF334155"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="14"/><color rgb="FF0F172A"/><name val="Calibri"/><family val="2"/></font>
+    <font><sz val="10"/><color rgb="FF64748B"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="10"/><color rgb="FF166534"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="10"/><color rgb="FF991B1B"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="10"/><color rgb="FF854D0E"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF047857"/><name val="Calibri"/><family val="2"/></font>
+  </fonts>
+  <fills count="7">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF1E293B"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFC"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFDCFCE7"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFEE2E2"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFEF3C7"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFE2E8F0"/></left>
+      <right style="thin"><color rgb="FFE2E8F0"/></right>
+      <top style="thin"><color rgb="FFE2E8F0"/></top>
+      <bottom style="thin"><color rgb="FFE2E8F0"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="12">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="4" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="5" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="6" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="7" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>
+  </cellXfs>
+  <cellStyles count="1">
+    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+  </cellStyles>
+  <dxfs count="0"/>
+  <tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/>
+</styleSheet>';
+    }
+
+    /**
+     * Normalize to valid UTF-8 and strip XML 1.0 illegal control characters.
+     */
+    protected static function cleanXmlString(string $value): string
+    {
+        if (!mb_check_encoding($value, 'UTF-8')) {
+            $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+        }
+        $cleaned = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value);
+        if ($cleaned === null) {
+            $cleaned = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value);
+        }
+        return $cleaned ?? '';
     }
 
     /**

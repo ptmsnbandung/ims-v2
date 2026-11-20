@@ -2987,8 +2987,13 @@ class TeknikController extends Controller
 
         $downloadFilename = 'Data_Pelanggan_IMS_' . date('Ymd_His') . '.xlsx';
 
+        if (ob_get_length()) {
+            @ob_end_clean();
+        }
+
         return response()->download($xlsxFile, $downloadFilename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
         ])->deleteFileAfterSend(true);
     }
 

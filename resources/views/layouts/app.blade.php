@@ -3492,7 +3492,7 @@
                             audioFile = '{{ asset("assets/sound/notifikasi_tes_ims.mp3") }}';
                         } else if (type === 'pembayaran' || title.includes('pembayaran') || text.includes('pembayaran tagihan') || text.includes('pembayaran biaya registrasi')) {
                             audioFile = '{{ asset("assets/sound/notifikasi_pembayaran_masuk.mp3") }}';
-                        } else if (type === 'tiket' || title.includes('tiket') || text.includes('tiket gangguan') || type === 'noc_alarm') {
+                        } else if (type === 'tiket' || title.includes('tiket') || text.includes('tiket gangguan')) {
                             audioFile = '{{ asset("assets/sound/notifikasi_tiket_gangguan.mp3") }}';
                         } else if (type === 'noc_recovery' || text.includes('pulih') || text.includes('kembali online')) {
                             audioFile = '{{ asset("assets/sound/anoun.mp3") }}';
@@ -3526,6 +3526,15 @@
 
             playChimeAndSpeak(item) {
                 return new Promise((resolve) => {
+                    const isTicket = item.type === 'tiket' || item.is_ticket || item.status === 'SELESAI' || (item.device_key && String(item.device_key).startsWith('ticket_'));
+                    const isNocNoVoice = item.skipSpeech || item.type === 'noc_alarm' || (item.type === 'noc_recovery' && !isTicket);
+
+                    // Untuk alarm NOC DOWN/LOS atau kembali normal perangkat, cukup bunyi nada/alarm tanpa suara manusia berbicara
+                    if (isNocNoVoice) {
+                        resolve();
+                        return;
+                    }
+
                     const text = item.speech_text || item.title;
                     if (!text) {
                         resolve();
@@ -3784,7 +3793,7 @@
                 const item = recoveredItem || {};
                 const userName = window.extractCleanNocUserName(item);
                 const displayName = item.device_name || userName;
-                const isTicket = item.status === 'SELESAI' || (item.device_key && item.device_key.startsWith('ticket_'));
+                const isTicket = item.status === 'SELESAI' || (item.device_key && String(item.device_key).startsWith('ticket_')) || item.is_ticket;
 
                 let speechText = '';
                 let title = '';
@@ -3795,9 +3804,8 @@
                     title = 'Tiket Gangguan Selesai';
                     message = `Tiket gangguan ${displayName} telah diselesaikan.`;
                 } else {
-                    speechText = totalRecoveredCount > 1 
-                        ? `Koneksi pulih. ${totalRecoveredCount} pelanggan telah normal kembali termasuk ${userName}.`
-                        : `Koneksi pulih. Pelanggan ${userName} telah kembali online dan normal.`;
+                    // Untuk perangkat kembali normal (bukan tiket), cukup nada harmoni tanpa suara manusia
+                    speechText = '';
                     title = 'Koneksi Pulih (Normal)';
                     message = totalRecoveredCount > 1 
                         ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
@@ -3808,9 +3816,11 @@
                     window.ImsVoice.enqueueNotification({
                         type: "noc_recovery",
                         status: isTicket ? "SELESAI" : "UP",
+                        is_ticket: isTicket,
+                        skipSpeech: !isTicket, // HANYA bersuara manusia jika ini adalah tiket
                         title: title,
                         message: message,
-                        speech_text: speechText,
+                        speech_text: isTicket ? speechText : null,
                         device_name: displayName,
                         user_name: userName,
                         skipChime: true,
@@ -3822,7 +3832,7 @@
             } catch (e) {}
         };
 
-        // Global NOC Emergency Alert Audio Synthesizer & Voice Chime (LOS & DOWN)
+        // Global NOC Emergency Alert Audio Synthesizer (LOS & DOWN - Cukup Sound Alarm Saja, Tanpa Suara Manusia)
         window.playNocEmergencySound = function(alertItem, force = false) {
             if (!force && window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
                 return;
@@ -3869,22 +3879,21 @@
                 // Silently skip if audio context is not allowed to run
             }
 
-            // 2. Play speech via window.ImsVoice if available
+            // 2. Dispatch toast notifikasi tanpa suara manusia (skipSpeech: true)
             try {
                 if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === 'function') {
                     const item = alertItem || {};
                     const st = (item.status || 'LOS').toUpperCase();
-                    const statusLabel = st === 'LOS' ? 'Loss of Signal' : 'Down';
                     const userName = window.extractCleanNocUserName(item);
                     const displayName = item.device_name || userName;
-                    const speechText = item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada pelanggan ${userName}.`;
 
                     window.ImsVoice.enqueueNotification({
                         type: 'noc_alarm',
                         status: st,
+                        skipSpeech: true, // Alarm DOWN & LOS cukup nada alarm Web Audio saja, tanpa suara manusia
+                        speech_text: null,
                         title: item.title || (st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi'),
                         message: item.message || `${displayName} mengalami gangguan ${st}`,
-                        speech_text: speechText,
                         device_name: displayName,
                         user_name: userName,
                         skipChime: true,

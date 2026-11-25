@@ -187,7 +187,7 @@
                     <nav class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest mb-0.5 text-[#c6edf3]">
                         <a href="{{ route('dashboard') }}" class="hover:text-white transition">IMS</a>
                         <span class="text-teal-300/70">&gt;</span>
-                        <span>Modul Teknik</span>
+                        <span>{{ auth()->user()?->hasRole('finance') && !auth()->user()?->hasRole('teknik') ? 'Modul Finance' : 'Modul Teknik' }}</span>
                         <span class="text-teal-300/70">&gt;</span>
                         <span class="text-white">GIS Coverage Presisi</span>
                     </nav>

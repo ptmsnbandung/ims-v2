@@ -314,6 +314,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/billing-registrasi/export', [FinanceController::class, 'exportBillingRegistrasi'])->name('billing-registrasi.export');
         Route::get('/api/billing-registrasi-detail', [FinanceController::class, 'getBillingRegistrasiDetail'])->name('billing-registrasi.detail.query');
 
+        // Cek Coverage Lokasi ke ODP Terdekat (Finance)
+        Route::get('/coverage', [TeknikController::class, 'coverage'])->name('coverage');
+        Route::post('/coverage/update-ticket-status', [TeknikController::class, 'updateCoverageTicketStatus'])->name('coverage.update-status');
+
         // 3. Master Paket Internet & Layanan Bandwidth (Redirect to Admin)
         Route::get('/paket', fn() => redirect()->route('admin.paket'))->name('paket');
         Route::post('/paket/store', [AdminController::class, 'storePaket'])->name('paket.store');

@@ -771,12 +771,13 @@ class OltConnectionService
         }
 
         // Enter enable / privileged mode if needed and prompt is '>'
-        if (str_ends_with(trim($buffer), '>') && !empty($enablePassword)) {
+        if (str_ends_with(trim($buffer), '>')) {
+            $enPass = !empty($enablePassword) ? $enablePassword : ($password ?: env('OLT_ENABLE_PASS', 'zxr10'));
             fwrite($socket, "enable\r\n");
-            $promptRes = $this->readUntilPrompt($socket, ['Password:', '#']);
+            $promptRes = $this->readUntilPrompt($socket, ['Password:', '#', '>']);
             if (str_contains(strtolower($promptRes), 'pass')) {
-                fwrite($socket, $enablePassword . "\r\n");
-                $buffer .= $this->readUntilPrompt($socket, ['#']);
+                fwrite($socket, $enPass . "\r\n");
+                $buffer .= $this->readUntilPrompt($socket, ['#', '>']);
             }
         }
 
@@ -788,9 +789,17 @@ class OltConnectionService
         $output = '';
         foreach ($commands as $cmd) {
             fwrite($socket, $cmd . "\r\n");
-            usleep(200000); // 200ms pause for OLT response
-            $cmdOutput = $this->readUntilPrompt($socket, ['#', '>', '%'], 5);
+            usleep(100000); // 100ms pause for OLT response
+            $cmdOutput = $this->readUntilPrompt($socket, ['#', '>', '%', '[yes/no]:', '(y/n)', 'yes/no]:', '[y/n]'], 5);
             $output .= $cmdOutput;
+
+            // Tangani konfirmasi interaktif OLT (misal ZTE V2.1.0 "Confirm to reboot? [yes/no]:")
+            if (preg_match('/\[yes\/no\]|\(y\/n\)|confirm/i', $cmdOutput)) {
+                fwrite($socket, "yes\r\n");
+                usleep(100000);
+                $confirmOutput = $this->readUntilPrompt($socket, ['#', '>', '%'], 5);
+                $output .= $confirmOutput;
+            }
         }
 
         // Exit session
@@ -1144,6 +1153,18 @@ class OltConnectionService
                 return [
                     'success' => false,
                     'message' => "Gagal reboot ONU {$cleanIndex}: Interface/ONU tidak ditemukan di OLT {$oltName} ({$ip}:{$port}).",
+                    'output' => $output,
+                ];
+            }
+
+            // Cek jika modem sedang offline / unavailable di OLT
+            $isUnavailable = str_contains($output, 'ONU is unavailable') || str_contains($output, '63987');
+            if ($isUnavailable) {
+                Log::notice("OLT Remote Reboot sent to {$oltName} ({$ip}:{$port}) for {$cleanIndex}, but ONU is currently offline/unavailable.");
+                return [
+                    'success' => true,
+                    'is_offline' => true,
+                    'message' => "Perintah reboot berhasil dieksekusi ke OLT {$oltName}, namun ONT/Modem {$cleanIndex} saat ini terdeteksi Offline / Tidak terjangkau sinyal optik.",
                     'output' => $output,
                 ];
             }

@@ -1743,7 +1743,7 @@ class NocController extends Controller
         }
 
         // 4a. Eksekusi Remote Reboot OLT ONU jika port dan OLT diisi
-        if (!empty($normalizedIndexOlt) && in_array($request->media_akses, ['FTTH', 'FTTH MSN', 'GPON'])) {
+        if (!empty($normalizedIndexOlt) && (empty($request->media_akses) || str_contains(strtoupper($request->media_akses), 'FTTH') || str_contains(strtoupper($request->media_akses), 'GPON') || str_contains(strtoupper($request->media_akses), 'ONU'))) {
             try {
                 $oltService = app(OltConnectionService::class);
                 $oltService->rebootOnu($normalizedIndexOlt, $request->olt);

@@ -398,6 +398,7 @@ class NotificationController extends Controller
             }
 
             // 3.4 Konfirmasi Transfer Manual / Bukti Upload Pelanggan (payment_confirmations & ptmsn.payment_confirmations)
+            $seenPayKodes = [];
             if ($this->hasTableFast('payment_confirmations')) {
                 try {
                     $newPayments = DB::table('payment_confirmations')
@@ -412,6 +413,12 @@ class NotificationController extends Controller
                         ->get();
 
                     foreach ($newPayments as $pay) {
+                        $k = $pay->kode_billing_layanan ?? '';
+                        $normK = !empty($k) ? strtolower(str_replace(['/', '-'], '_', $k)) : null;
+                        if ($normK) {
+                            $seenPayKodes[$normK] = true;
+                        }
+
                         $nama = $pay->nama_pelanggan ?? ($pay->nomor_internet ?? 'Pelanggan');
                         $payId = $pay->id ?: ($pay->kode_billing_layanan ?: 'pay');
                         $payDate = $pay->created_at ?: ($pay->updated_at ?: 'pending');
@@ -441,6 +448,15 @@ class NotificationController extends Controller
                 ");
 
                 foreach ($ptmsnPayments as $pay) {
+                    $k = $pay->kode_billing_layanan ?? '';
+                    $normK = !empty($k) ? strtolower(str_replace(['/', '-'], '_', $k)) : null;
+                    if ($normK && isset($seenPayKodes[$normK])) {
+                        continue; // Hindari notifikasi ganda jika sudah ada di tabel lokal
+                    }
+                    if ($normK) {
+                        $seenPayKodes[$normK] = true;
+                    }
+
                     $nama = $pay->nama_pelanggan ?? ($pay->nomor_internet ?? 'Pelanggan');
                     $payId = $pay->id ?: ($pay->kode_billing_layanan ?: 'ptmsn_pay');
                     $payDate = $pay->created_at ?: ($pay->updated_at ?: 'pending');

@@ -4881,10 +4881,101 @@ class FinanceController extends Controller
                 ->toArray();
         }
 
-        // Tambahkan dari Payment Confirmations terlebih dahulu
+        // Helper normalisasi format kode billing (menghilangkan perbedaan slash dan dash)
+        $normalizeKode = function($k) {
+            return strtolower(trim(str_replace(['/', '-'], '_', (string)$k)));
+        };
+
+        // Normalisasi dan Penggabungan (Deduplikasi) Konfirmasi per Invoice:
+        // Jika ada lebih dari satu entri konfirmasi untuk tagihan yang sama (misal dari local DB dan cross-db ptmsn,
+        // atau pelanggan submit ulang), gabungkan menjadi 1 entri terbaik agar foto bukti transfer, catatan pelanggan,
+        // dan status approval tidak hilang dan tidak pernah muncul baris ganda di tabel.
+        $mergedConfirmations = collect();
+        $groupedByKode = [];
+
         foreach ($confirmations as $c) {
+            $rawK = trim((string)($c->kode_billing_layanan ?? ''));
+            if ($rawK === '') {
+                $mergedConfirmations->push($c);
+                continue;
+            }
+            $normKey = $normalizeKode($rawK);
+            if (!isset($groupedByKode[$normKey])) {
+                $groupedByKode[$normKey] = [];
+            }
+            $groupedByKode[$normKey][] = $c;
+        }
+
+        foreach ($groupedByKode as $normKey => $confGroup) {
+            if (count($confGroup) === 1) {
+                $mergedConfirmations->push($confGroup[0]);
+                continue;
+            }
+
+            // Pilih kandidat terbaik yang memiliki foto bukti transfer (proof_file) asli
+            $bestConf = null;
+            foreach ($confGroup as $candidate) {
+                $pf = ($candidate->proof_file ?? null) ?: (($candidate->bukti_transfer ?? null) ?: ($candidate->file ?? null));
+                if (!empty($pf)) {
+                    $bestConf = clone $candidate;
+                    break;
+                }
+            }
+            if (!$bestConf) {
+                $bestConf = clone $confGroup[0];
+            }
+
+            // Gabungkan atribut dari seluruh kandidat
+            foreach ($confGroup as $other) {
+                // Pertahankan proof file asli jika kandidat terpilih belum ada
+                $pfOther = ($other->proof_file ?? null) ?: (($other->bukti_transfer ?? null) ?: ($other->file ?? null));
+                if (empty($bestConf->proof_file) && !empty($pfOther)) {
+                    $bestConf->proof_file = $pfOther;
+                }
+
+                // Pertahankan bank & nomor rekening yang lebih detail
+                $bOther = ($other->destination_bank ?? null) ?: (($other->bank ?? null) ?: ($other->bank_name ?? null));
+                if (!empty($bOther) && (empty($bestConf->destination_bank) || strlen((string)$bOther) > strlen((string)$bestConf->destination_bank))) {
+                    $bestConf->destination_bank = $bOther;
+                }
+
+                // Pertahankan catatan asli pelanggan (bukan catatan generic sistem "Terverifikasi")
+                $notesOther = (string)($other->notes ?? ($other->keterangan ?? ''));
+                if (!empty($notesOther) && !str_contains($notesOther, 'Terverifikasi')) {
+                    $bestConf->notes = $notesOther;
+                }
+
+                // Pertahankan admin notes dari verifikator finance jika ada
+                if (!empty($other->admin_notes)) {
+                    $bestConf->admin_notes = $other->admin_notes;
+                }
+
+                // Jika salah satunya sudah approved, maka status hasil penggabungan adalah approved
+                if (($other->status ?? '') === 'approved') {
+                    $bestConf->status = 'approved';
+                }
+
+                // Nama pelanggan asli
+                if (!empty($other->customer_name) && strcasecmp($other->customer_name, 'Pelanggan') !== 0) {
+                    $bestConf->customer_name = $other->customer_name;
+                }
+            }
+
+            $mergedConfirmations->push($bestConf);
+        }
+
+        // Tambahkan dari Payment Confirmations yang sudah dideduplikasi
+        foreach ($mergedConfirmations as $c) {
             $kodeBillingConf = $c->kode_billing_layanan ?? '';
+            $normK = !empty($kodeBillingConf) ? $normalizeKode($kodeBillingConf) : null;
+
+            // Pastikan tidak ada invoice yang dimasukkan lebih dari satu kali
+            if ($normK && isset($seenKodes[$normK])) {
+                continue;
+            }
+
             if (!empty($kodeBillingConf)) {
+                $seenKodes[$normK] = true;
                 $seenKodes[$kodeBillingConf] = true;
                 $seenKodes[str_replace('/', '-', $kodeBillingConf)] = true;
                 $seenKodes[str_replace('-', '/', $kodeBillingConf)] = true;
@@ -5058,9 +5149,11 @@ class FinanceController extends Controller
         // Tambahkan dari billingRows jika belum ada di confirmation
         foreach ($billingRows as $b) {
             $kb = $b->kode_billing_layanan;
-            if (isset($seenKodes[$kb]) || isset($seenKodes[str_replace('/', '-', $kb)]) || isset($seenKodes[str_replace('-', '/', $kb)])) {
+            $normKb = $normalizeKode($kb);
+            if (isset($seenKodes[$normKb]) || isset($seenKodes[$kb]) || isset($seenKodes[str_replace('/', '-', $kb)]) || isset($seenKodes[str_replace('-', '/', $kb)])) {
                 continue;
             }
+            $seenKodes[$normKb] = true;
 
             $conf = $confirmationsByKode->get($kb)
                 ?? $confirmationsByKode->get(str_replace('/', '-', $kb))
@@ -5344,23 +5437,48 @@ class FinanceController extends Controller
                     $pcData['proof_file'] = $proofUrl;
                 }
 
+                // Cek apakah ada record konfirmasi di cross-db ptmsn.payment_confirmations (dari Portal Pelanggan)
+                $existPtmsn = null;
+                try {
+                    $escapedKode = addslashes($kodeBilling);
+                    $escapedAlt1 = addslashes(str_replace('/', '-', $kodeBilling));
+                    $escapedAlt2 = addslashes(str_replace('-', '/', $kodeBilling));
+                    $ptRows = DB::select("SELECT * FROM ptmsn.payment_confirmations WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}') ORDER BY id DESC LIMIT 1");
+                    if (!empty($ptRows)) {
+                        $existPtmsn = $ptRows[0];
+                    }
+                } catch (\Throwable $e) {}
+
                 if ($existPc) {
                     $updateData = array_intersect_key($pcData, array_flip($pcCols));
+                    // Jika di lokal belum ada proof_file tetapi di ptmsn ada, bawa proof_file dari ptmsn
+                    if (empty($existPc->proof_file) && $existPtmsn && !empty($existPtmsn->proof_file) && $hasCol('proof_file')) {
+                        $updateData['proof_file'] = $existPtmsn->proof_file;
+                    }
+                    if (empty($existPc->notes) && $existPtmsn && !empty($existPtmsn->notes) && $hasCol('notes')) {
+                        $updateData['notes'] = $existPtmsn->notes;
+                    }
                     DB::table('payment_confirmations')
                         ->where('id', $existPc->id)
                         ->update($updateData);
                 } else {
+                    // Jika di tabel lokal belum ada, bawa data bukti transfer dan catatan asli dari ptmsn agar tidak menjadi entri duplikat kosong
+                    $inheritedNotes = ($existPtmsn && !empty($existPtmsn->notes)) ? $existPtmsn->notes : $catatan;
+                    $inheritedProof = ($existPtmsn && !empty($existPtmsn->proof_file)) ? $existPtmsn->proof_file : ($proofUrl ?: '');
+                    $inheritedBank = ($existPtmsn && !empty($existPtmsn->destination_bank)) ? $existPtmsn->destination_bank : $bank;
+
                     $newPcData = array_merge($pcData, [
                         'kode_billing_layanan' => $kodeBilling,
-                        'customer_id' => $custNo ?: ($inv?->nomor_internet ?? '-'),
-                        'customer_name' => $custName,
-                        'notes' => $catatan,
-                        'created_at' => Carbon::now()->toDateTimeString(),
+                        'customer_id' => $custNo ?: ($inv?->nomor_internet ?? ($existPtmsn?->customer_id ?? '-')),
+                        'customer_name' => (!empty($custName) && strcasecmp($custName, 'Pelanggan') !== 0) ? $custName : ($existPtmsn?->customer_name ?? $custName),
+                        'notes' => $inheritedNotes,
+                        'created_at' => ($existPtmsn?->created_at ?? Carbon::now()->toDateTimeString()),
                     ]);
-                    if ($proofUrl && $hasCol('proof_file')) {
-                        $newPcData['proof_file'] = $proofUrl;
-                    } elseif ($hasCol('proof_file') && !isset($newPcData['proof_file'])) {
-                        $newPcData['proof_file'] = '';
+                    if ($hasCol('destination_bank')) {
+                        $newPcData['destination_bank'] = $inheritedBank;
+                    }
+                    if ($hasCol('proof_file')) {
+                        $newPcData['proof_file'] = $inheritedProof;
                     }
 
                     $insertData = array_intersect_key($newPcData, array_flip($pcCols));

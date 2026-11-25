@@ -420,24 +420,27 @@
         </div>
 
         <!-- KPI 2: Pembayaran Masuk Hari Ini -->
-        <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs relative overflow-hidden">
+        <a href="{{ route('finance.notifikasi', ['tanggal' => \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'), 'tab' => $tab]) }}"
+           title="Klik untuk memfilter pembayaran hari ini ({{ \Carbon\Carbon::now('Asia/Jakarta')->format('d M Y') }})"
+           class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs relative overflow-hidden block hover:border-[#0891b2]/60 hover:shadow-md transition group cursor-pointer {{ $selectedTanggal === \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d') ? 'ring-2 ring-[#0891b2] bg-cyan-50/20' : '' }}">
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Pembayaran Hari Ini</span>
+                    <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 group-hover:text-[#0891b2] transition">Pembayaran Hari Ini</span>
                     <h3 class="text-xl font-bold text-[#0891b2] dark:text-cyan-400 mt-0.5">
                         {{ number_format($kpiTodayCount, 0, ',', '.') }}
                     </h3>
                 </div>
-                <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-[#0891b2] dark:text-cyan-400 flex items-center justify-center ring-1 ring-cyan-500/20">
+                <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-[#0891b2] dark:text-cyan-400 flex items-center justify-center ring-1 ring-cyan-500/20 group-hover:bg-[#0891b2] group-hover:text-white transition">
                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                     </svg>
                 </div>
             </div>
-            <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+            <div class="mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                 <span>Tanggal: <strong>{{ \Carbon\Carbon::now('Asia/Jakarta')->format('d M Y') }}</strong></span>
+                <span class="text-[#0891b2] font-semibold text-[9px] group-hover:underline">Lihat Hari Ini &rarr;</span>
             </div>
-        </div>
+        </a>
 
         <!-- KPI 3: Total Lunas Bulan Ini -->
         <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs relative overflow-hidden">
@@ -468,18 +471,18 @@
                 <!-- Tab Buttons (Horizontal scrollable on mobile without cutting off) -->
                 <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-xl max-w-full overflow-x-auto scrollbar-none touch-pan-x"
                      style="-ms-overflow-style: none; scrollbar-width: none;">
-                    <a href="{{ route('finance.notifikasi', ['tab' => 'all', 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
+                    <a href="{{ route('finance.notifikasi', ['tab' => 'all', 'tanggal' => $selectedTanggal, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
                        class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap {{ $tab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
                         Semua Notifikasi
                     </a>
-                    <a href="{{ route('finance.notifikasi', ['tab' => 'pending', 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
+                    <a href="{{ route('finance.notifikasi', ['tab' => 'pending', 'tanggal' => $selectedTanggal, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
                        class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'pending' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
                         <span>Menunggu Approval</span>
                         @if($kpiPendingCount > 0)
                             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {{ $tab === 'pending' ? 'bg-white text-amber-600' : 'bg-amber-500 text-white' }}">{{ $kpiPendingCount }}</span>
                         @endif
                     </a>
-                    <a href="{{ route('finance.notifikasi', ['tab' => 'approved', 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
+                    <a href="{{ route('finance.notifikasi', ['tab' => 'approved', 'tanggal' => $selectedTanggal, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
                        class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap {{ $tab === 'approved' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
                         Sudah Disetujui (Lunas)
                     </a>
@@ -507,15 +510,32 @@
                 </div>
             </div>
 
-            <!-- Row 2: Filter Toolbar (Bulan, Tahun, Bayar Lewat Mana, Reset Filter, Per Page) -->
+            <!-- Row 2: Filter Toolbar (Tanggal, Bulan, Tahun, Bayar Lewat Mana, Reset Filter, Per Page) -->
             <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-                <!-- Dropdown Filters Grid on Mobile, Inline Row on Desktop -->
+                <!-- Dropdown & Date Filters Grid on Mobile, Inline Row on Desktop -->
                 <div class="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2 sm:gap-3 flex-1">
-                    <!-- 1. Filter Bulan -->
+                    <!-- 1. Filter Tanggal Spesifik & Shortcut Hari Ini -->
+                    <div class="col-span-2 sm:col-auto flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5">
+                        <label class="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase sm:normal-case tracking-wider sm:tracking-normal whitespace-nowrap">Tanggal:</label>
+                        <div class="flex items-center gap-1">
+                            <input type="date"
+                                   name="tanggal"
+                                   value="{{ $selectedTanggal }}"
+                                   onchange="this.form.submit()"
+                                   class="w-full sm:w-auto bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0891b2] transition cursor-pointer">
+                            <a href="{{ route('finance.notifikasi', ['tanggal' => \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d'), 'tab' => $tab, 'metode' => $selectedMetode, 'per_page' => $perPage]) }}"
+                               title="Filter cepat pembayaran hari ini"
+                               class="shrink-0 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition cursor-pointer {{ $selectedTanggal === \Carbon\Carbon::now('Asia/Jakarta')->format('Y-m-d') ? 'bg-[#0891b2] text-white shadow-2xs' : 'bg-cyan-50 dark:bg-cyan-950/40 text-[#0891b2] hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200 dark:border-cyan-800/60' }}">
+                                ⚡ Hari Ini
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 2. Filter Bulan -->
                     <div class="col-span-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5">
                         <label class="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase sm:normal-case tracking-wider sm:tracking-normal whitespace-nowrap">Bulan:</label>
                         <select name="bulan"
-                                onchange="this.form.submit()"
+                                onchange="if(this.form.tanggal) this.form.tanggal.value = ''; this.form.submit()"
                                 class="w-full sm:w-auto bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-2 sm:py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0891b2] transition cursor-pointer">
                             <option value="">Semua Bulan</option>
                             @foreach($bulanList as $k => $name)
@@ -526,11 +546,11 @@
                         </select>
                     </div>
 
-                    <!-- 2. Filter Tahun -->
+                    <!-- 3. Filter Tahun -->
                     <div class="col-span-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5">
                         <label class="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase sm:normal-case tracking-wider sm:tracking-normal whitespace-nowrap">Tahun:</label>
                         <select name="tahun"
-                                onchange="this.form.submit()"
+                                onchange="if(this.form.tanggal) this.form.tanggal.value = ''; this.form.submit()"
                                 class="w-full sm:w-auto bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-2 sm:py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0891b2] transition cursor-pointer">
                             <option value="">Semua Tahun</option>
                             @foreach($tahunList as $th)
@@ -541,7 +561,7 @@
                         </select>
                     </div>
 
-                    <!-- 3. Filter Bayar Lewat Mana -->
+                    <!-- 4. Filter Bayar Lewat Mana -->
                     <div class="col-span-2 sm:col-auto flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5">
                         <label class="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase sm:normal-case tracking-wider sm:tracking-normal whitespace-nowrap">Bayar Lewat:</label>
                         <select name="metode"
@@ -572,7 +592,7 @@
                     </div>
 
                     <!-- Reset Filter Button (Only shows when filter active) -->
-                    @if($selectedBulan !== '' || $selectedMetode !== '' || ($selectedTahun !== '' && $selectedTahun != date('Y')) || $search !== '')
+                    @if($selectedTanggal !== '' || $selectedBulan !== '' || $selectedMetode !== '' || ($selectedTahun !== '' && $selectedTahun != date('Y')) || $search !== '')
                         <a href="{{ route('finance.notifikasi', ['tab' => $tab]) }}"
                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50/70 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200/80 dark:border-rose-900/80 transition shadow-2xs whitespace-nowrap">
                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

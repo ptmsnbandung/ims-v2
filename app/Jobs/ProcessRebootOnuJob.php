@@ -96,7 +96,7 @@ class ProcessRebootOnuJob implements ShouldQueue
                     Log::warning("Gagal log trx_batchjob_register_log background reboot: " . $e->getMessage());
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("Error executing ProcessRebootOnuJob for queue ID {$this->queueId}: " . $e->getMessage());
             DB::table('reboot_onu_queues')->where('id', $this->queueId)->update([
                 'status' => 'failed',

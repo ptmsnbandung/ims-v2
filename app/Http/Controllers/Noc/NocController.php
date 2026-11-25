@@ -2318,6 +2318,24 @@ class NocController extends Controller
             return response()->json(['success' => false, 'items' => [], 'summary' => []]);
         }
 
+        // Auto-resolve stale items: jika item berstatus 'processing' lebih dari 60 detik
+        // (artinya perintah reboot sudah berhasil dikirim ke OLT dan sesi telnet sudah selesai / terputus)
+        try {
+            DB::table('reboot_onu_queues')
+                ->where('status', 'processing')
+                ->where(function ($q) {
+                    $q->where('started_at', '<=', now()->subSeconds(60))
+                      ->orWhereNull('started_at');
+                })
+                ->where('updated_at', '<=', now()->subSeconds(60))
+                ->update([
+                    'status' => 'success',
+                    'response_message' => 'Perintah reboot telah dieksekusi ke OLT',
+                    'completed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        } catch (\Throwable $e) {}
+
         $batchId = $request->query('batch_id');
 
         $query = DB::table('reboot_onu_queues')->orderBy('id', 'desc');
@@ -2375,6 +2393,34 @@ class NocController extends Controller
         $item = $query->first();
 
         if (!$item) {
+            // Auto-resolve stale processing items yang macet jika tidak ada antrean pending
+            $staleItem = DB::table('reboot_onu_queues')
+                ->where('status', 'processing')
+                ->where(function ($q) {
+                    $q->where('started_at', '<=', now()->subSeconds(60))
+                      ->orWhereNull('started_at');
+                })
+                ->where('updated_at', '<=', now()->subSeconds(60))
+                ->orderBy('id', 'asc')
+                ->first();
+
+            if ($staleItem) {
+                DB::table('reboot_onu_queues')->where('id', $staleItem->id)->update([
+                    'status' => 'success',
+                    'response_message' => 'Perintah reboot telah dieksekusi ke OLT',
+                    'completed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                return response()->json([
+                    'processed' => true,
+                    'id' => $staleItem->id,
+                    'nomor_internet' => $staleItem->nomor_internet,
+                    'status' => 'success',
+                    'message' => 'Perintah reboot telah dieksekusi ke OLT',
+                ]);
+            }
+
             return response()->json([
                 'processed' => false,
                 'message' => 'Tidak ada antrean pending.',

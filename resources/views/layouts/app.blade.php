@@ -3526,11 +3526,13 @@
 
             playChimeAndSpeak(item) {
                 return new Promise((resolve) => {
-                    const isTicket = item.type === 'tiket' || item.is_ticket || item.status === 'SELESAI' || (item.device_key && String(item.device_key).startsWith('ticket_'));
-                    const isNocNoVoice = item.skipSpeech || item.type === 'noc_alarm' || (item.type === 'noc_recovery' && !isTicket);
+                    const isNewTicket = (item.type === 'tiket' || (item.device_key && String(item.device_key).startsWith('ticket_'))) && item.status !== 'SELESAI' && item.type !== 'noc_recovery';
+                    const isNocNoVoice = item.skipSpeech || item.type === 'noc_alarm' || item.type === 'noc_recovery' || item.status === 'SELESAI' || (item.title && /selesai/i.test(item.title));
 
-                    // Untuk alarm NOC DOWN/LOS atau kembali normal perangkat, cukup bunyi nada/alarm tanpa suara manusia berbicara
-                    if (isNocNoVoice) {
+                    // Untuk alarm NOC DOWN/LOS, kembali normal perangkat, dan notifikasi gangguan selesai:
+                    // CUKUP BUNYI NADA / SOUND SAJA, JANGAN ADA SUARA MANUSIA BERBICARA.
+                    // Suara manusia hanya untuk tiket baru yang masuk (isNewTicket) atau test audio.
+                    if (isNocNoVoice || (!isNewTicket && item.type !== 'test' && item.type !== 'pembayaran')) {
                         resolve();
                         return;
                     }
@@ -3788,24 +3790,20 @@
                 // Silently skip if audio context is not allowed to run
             }
 
-            // 2. Play speech via window.ImsVoice & Toast Banner
+            // 2. Dispatch toast notifikasi pemulihan/selesai (CUKUP SOUND NADA HARMONI SAJA, TANPA SUARA MANUSIA)
             try {
                 const item = recoveredItem || {};
                 const userName = window.extractCleanNocUserName(item);
                 const displayName = item.device_name || userName;
                 const isTicket = item.status === 'SELESAI' || (item.device_key && String(item.device_key).startsWith('ticket_')) || item.is_ticket;
 
-                let speechText = '';
                 let title = '';
                 let message = '';
 
                 if (isTicket) {
-                    speechText = `Tiket selesai. Gangguan pelanggan ${userName} telah berhasil diselesaikan.`;
                     title = 'Tiket Gangguan Selesai';
                     message = `Tiket gangguan ${displayName} telah diselesaikan.`;
                 } else {
-                    // Untuk perangkat kembali normal (bukan tiket), cukup nada harmoni tanpa suara manusia
-                    speechText = '';
                     title = 'Koneksi Pulih (Normal)';
                     message = totalRecoveredCount > 1 
                         ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
@@ -3817,10 +3815,10 @@
                         type: "noc_recovery",
                         status: isTicket ? "SELESAI" : "UP",
                         is_ticket: isTicket,
-                        skipSpeech: !isTicket, // HANYA bersuara manusia jika ini adalah tiket
+                        skipSpeech: true, // Pemulihan perangkat & Gangguan selesai CUKUP NADA SAJA, TANPA suara manusia berbicara
                         title: title,
                         message: message,
-                        speech_text: isTicket ? speechText : null,
+                        speech_text: null,
                         device_name: displayName,
                         user_name: userName,
                         skipChime: true,

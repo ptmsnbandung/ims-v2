@@ -467,44 +467,44 @@
     <div class="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2.5">
         <form method="GET" action="{{ route('finance.notifikasi') }}" class="flex flex-col gap-2.5">
             <!-- Row 1: Tab Navigation & Quick Search -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-                <!-- Tab Buttons (Horizontal scrollable on mobile without cutting off) -->
-                <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-xl max-w-full overflow-x-auto scrollbar-none touch-pan-x"
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <!-- Tab Buttons (No horizontal scroll on desktop) -->
+                <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-xl shrink-0 overflow-x-auto sm:overflow-visible scrollbar-none"
                      style="-ms-overflow-style: none; scrollbar-width: none;">
                     <a href="{{ route('finance.notifikasi', ['tab' => 'all', 'tanggal' => $selectedTanggal, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
-                       class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap {{ $tab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                       class="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap {{ $tab === 'all' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
                         Semua Notifikasi
                     </a>
                     <a href="{{ route('finance.notifikasi', ['tab' => 'pending', 'tanggal' => $selectedTanggal, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
-                       class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'pending' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                       class="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap flex items-center gap-1.5 {{ $tab === 'pending' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
                         <span>Menunggu Approval</span>
                         @if($kpiPendingCount > 0)
                             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {{ $tab === 'pending' ? 'bg-white text-amber-600' : 'bg-amber-500 text-white' }}">{{ $kpiPendingCount }}</span>
                         @endif
                     </a>
                     <a href="{{ route('finance.notifikasi', ['tab' => 'approved', 'tanggal' => $selectedTanggal, 'bulan' => $selectedBulan, 'tahun' => $selectedTahun, 'metode' => $selectedMetode, 'search' => $search, 'per_page' => $perPage]) }}"
-                       class="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap {{ $tab === 'approved' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
+                       class="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap {{ $tab === 'approved' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white' }}">
                         Sudah Disetujui (Lunas)
                     </a>
                 </div>
 
                 <input type="hidden" name="tab" value="{{ $tab }}">
 
-                <!-- Search Bar & Controls -->
-                <div class="flex items-center gap-2 w-full md:max-w-xs lg:max-w-md justify-end">
-                    <div class="relative w-full">
+                <!-- Search Bar & Controls (Shortened to fit cleanly without scroll) -->
+                <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end shrink-0">
+                    <div class="relative w-full sm:w-52 md:w-60">
                         <input type="text"
                                name="search"
                                value="{{ $search }}"
-                               placeholder="Cari invoice, internet, pelanggan..."
-                               class="w-full pl-8 pr-3 py-2 sm:py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0891b2] text-slate-900 dark:text-white placeholder:text-slate-400">
-                        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                               placeholder="Cari invoice / pelanggan..."
+                               class="w-full pl-7 pr-2.5 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0891b2] text-slate-900 dark:text-white placeholder:text-slate-400">
+                        <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                         </svg>
                     </div>
 
                     <button type="submit"
-                            class="px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[#0891b2] to-[#0284c7] hover:from-[#0e7490] hover:to-[#0369a1] shadow-2xs transition flex-shrink-0 cursor-pointer">
+                            class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[#0891b2] to-[#0284c7] hover:from-[#0e7490] hover:to-[#0369a1] shadow-2xs transition shrink-0 cursor-pointer">
                         Cari
                     </button>
                 </div>
